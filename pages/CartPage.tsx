@@ -1,31 +1,59 @@
 
-
 import React, { useEffect } from 'react';
 import { CartItem } from '../types';
-import { ShoppingCart, Truck, XCircle, ArrowLeft } from 'lucide-react';
+import { ShoppingCart, Truck, XCircle, ArrowLeft, Plus, Minus } from 'lucide-react';
 import { useAppStore } from '../store';
 
 const CartItemComponent: React.FC<{ item: CartItem, updateCartQuantity: (id: string, size: string, newQuantity: number) => void }> = ({ item, updateCartQuantity }) => (
-  <div className="flex items-start border-b border-stone-200 py-4 last:border-b-0">
-    <div className="w-16 sm:w-24 aspect-[3.5/4] flex-shrink-0 overflow-hidden rounded-lg">
-      <img src={item.image} alt={item.name} className="w-full h-full object-cover" />
+  <div className="group flex gap-3 sm:gap-6 py-4 sm:py-6 border-b border-stone-100 last:border-0 bg-white transition-colors hover:bg-stone-50/30">
+    
+    {/* Image Section - Fixed width, responsive aspect ratio */}
+    <div className="w-20 sm:w-28 aspect-[3/4] flex-shrink-0 overflow-hidden rounded-lg border border-stone-100 bg-stone-200">
+      <img src={item.image} alt={item.name} className="w-full h-full object-cover transition-transform duration-500 group-hover:scale-105" />
     </div>
-    <div className="ml-4 flex-1 min-w-0">
-      <h3 className="text-sm sm:text-base font-semibold text-stone-900 truncate">{item.name}</h3>
-      <p className="text-xs text-pink-600 font-medium mt-0.5">Size: {item.size === 'Free' ? 'Free Size' : item.size}</p>
-      <p className="text-xs sm:text-sm text-stone-600">Price: <span>৳{item.price.toLocaleString('en-IN')}</span></p>
-      <p className="text-sm font-bold text-pink-600 sm:hidden mt-1">Total: <span>৳{(item.price * item.quantity).toLocaleString('en-IN')}</span></p>
-    </div>
-    <div className="flex flex-col sm:flex-row items-end sm:items-center space-y-2 sm:space-y-0 sm:space-x-4 ml-4">
-      <div className="flex items-center border border-stone-300 rounded-full">
-        <button onClick={() => updateCartQuantity(item.id, item.size, item.quantity - 1)} className="p-1 text-stone-600 hover:bg-pink-100 rounded-l-full transition w-7 h-7 active:scale-95">-</button>
-        <span className="w-6 text-center font-medium text-sm text-stone-900">{item.quantity}</span>
-        <button onClick={() => updateCartQuantity(item.id, item.size, item.quantity + 1)} className="p-1 text-stone-600 hover:bg-pink-100 rounded-r-full transition w-7 h-7 active:scale-95">+</button>
+
+    {/* Details Section - Flex column for mobile layout */}
+    <div className="flex flex-col flex-1 justify-between min-w-0 py-0.5">
+      
+      {/* Header: Name & Remove */}
+      <div className="flex justify-between items-start gap-3">
+        <div className="min-w-0 pr-1">
+          <h3 className="text-sm sm:text-base font-bold text-stone-800 line-clamp-2 leading-tight mb-1">{item.name}</h3>
+          <p className="text-xs sm:text-sm text-stone-500 font-medium">Size: <span className="text-stone-900">{item.size === 'Free' ? 'Free Size' : item.size}</span></p>
+        </div>
+        <button 
+          onClick={() => updateCartQuantity(item.id, item.size, 0)} 
+          className="text-stone-300 hover:text-red-500 transition-colors p-1 -mr-2 -mt-2 sm:mr-0 sm:mt-0"
+          aria-label="Remove item"
+        >
+          <XCircle className="w-5 h-5 sm:w-6 sm:h-6" />
+        </button>
       </div>
-      <p className="text-sm font-bold text-stone-900 w-24 text-right hidden sm:block">৳{(item.price * item.quantity).toLocaleString('en-IN')}</p>
-      <button onClick={() => updateCartQuantity(item.id, item.size, 0)} className="text-gray-400 hover:text-red-500 transition p-1 sm:p-2" aria-label="Remove item">
-        <XCircle className="w-5 h-5" />
-      </button>
+
+      {/* Footer: Price & Quantity */}
+      <div className="flex items-end justify-between mt-3">
+        <div className="flex flex-col">
+            <span className="text-[10px] sm:text-xs text-stone-400 font-medium">Unit: ৳{item.price.toLocaleString('en-IN')}</span>
+            <span className="text-sm sm:text-lg font-bold text-pink-600">৳{(item.price * item.quantity).toLocaleString('en-IN')}</span>
+        </div>
+
+        <div className="flex items-center bg-white border border-stone-200 rounded-full h-8 sm:h-10 shadow-sm">
+          <button 
+            onClick={() => updateCartQuantity(item.id, item.size, item.quantity - 1)} 
+            className="w-8 sm:w-10 h-full flex items-center justify-center text-stone-500 hover:text-pink-600 hover:bg-pink-50 rounded-l-full transition active:bg-pink-100"
+          >
+            <Minus className="w-3 h-3 sm:w-4 sm:h-4" />
+          </button>
+          <span className="w-8 sm:w-10 text-center font-bold text-xs sm:text-sm text-stone-800 select-none">{item.quantity}</span>
+          <button 
+            onClick={() => updateCartQuantity(item.id, item.size, item.quantity + 1)} 
+            className="w-8 sm:w-10 h-full flex items-center justify-center text-stone-500 hover:text-pink-600 hover:bg-pink-50 rounded-r-full transition active:bg-pink-100"
+          >
+            <Plus className="w-3 h-3 sm:w-4 sm:h-4" />
+          </button>
+        </div>
+      </div>
+
     </div>
   </div>
 );
@@ -62,11 +90,11 @@ const CartPage: React.FC = () => {
   if (cart.length === 0) {
     return (
       <main className="max-w-screen-2xl mx-auto px-4 sm:px-6 lg:px-8 pt-8 sm:pt-12 min-h-[60vh] flex items-center justify-center">
-        <div className="text-center p-8 sm:p-16 bg-white rounded-xl shadow-lg border border-stone-200">
+        <div className="text-center p-8 sm:p-16 bg-white rounded-xl shadow-lg border border-stone-200 w-full max-w-lg mx-4">
           <ShoppingCart className="w-12 h-12 text-pink-300 mx-auto mb-4" />
           <h2 className="text-xl sm:text-2xl font-bold text-stone-800 mb-2">Your Cart is Empty</h2>
           <p className="text-sm sm:text-base text-stone-600 mb-6">It looks like you haven't added any SAZO items yet.</p>
-          <button onClick={() => navigate('/shop')} className="bg-pink-600 text-white font-medium px-8 py-3 rounded-full hover:bg-pink-700 transition duration-300 shadow active:scale-95">
+          <button onClick={() => navigate('/shop')} className="bg-pink-600 text-white font-medium px-8 py-3 rounded-full hover:bg-pink-700 transition duration-300 shadow active:scale-95 w-full sm:w-auto">
             Start Shopping
           </button>
         </div>
@@ -75,28 +103,32 @@ const CartPage: React.FC = () => {
   }
 
   return (
-    <main className="max-w-screen-2xl mx-auto px-4 sm:px-6 lg:px-8 pt-8 sm:pt-12">
-      <h2 className="text-3xl sm:text-4xl font-bold text-stone-900 mb-8 text-center">Your Shopping Cart</h2>
-      <div className="lg:grid lg:grid-cols-3 lg:gap-8">
-        <div className="lg:col-span-2 bg-white p-4 sm:p-6 rounded-xl shadow-lg border border-stone-200">
+    <main className="max-w-screen-2xl mx-auto px-4 sm:px-6 lg:px-8 pt-6 sm:pt-12 pb-12">
+      <h2 className="text-2xl sm:text-4xl font-bold text-stone-900 mb-6 sm:mb-8 text-center">Your Shopping Cart</h2>
+      
+      <div className="lg:grid lg:grid-cols-12 lg:gap-8 items-start">
+        {/* Cart Items Column */}
+        <div className="lg:col-span-8 bg-white p-4 sm:p-6 rounded-xl shadow-lg border border-stone-200 mb-6 lg:mb-0">
           {cart.map(item => <CartItemComponent key={`${item.id}-${item.size}`} item={item} updateCartQuantity={updateCartQuantity} />)}
         </div>
-        <div className="lg:col-span-1 mt-6 lg:mt-0 bg-white p-6 rounded-xl shadow-lg border border-stone-200 lg:sticky top-24 h-fit">
-          <h3 className="text-xl font-bold text-stone-900 mb-6">Order Summary</h3>
+
+        {/* Summary Column */}
+        <div className="lg:col-span-4 bg-white p-5 sm:p-6 rounded-xl shadow-lg border border-stone-200 lg:sticky top-24 h-fit">
+          <h3 className="text-lg sm:text-xl font-bold text-stone-900 mb-4 sm:mb-6">Order Summary</h3>
           
-          {/* Detailed Items List in Summary */}
-          <div className="space-y-4 mb-6 max-h-80 overflow-y-auto pr-2">
+          {/* Detailed Items List in Summary - Hidden on mobile, shown on desktop for reference */}
+          <div className="hidden lg:block space-y-4 mb-6 max-h-80 overflow-y-auto pr-2 custom-scrollbar">
             {cart.map((item) => (
               <div key={`${item.id}-${item.size}`} className="flex gap-3">
-                <div className="w-14 aspect-[3.5/4] flex-shrink-0 overflow-hidden rounded-md border border-stone-100">
+                <div className="w-12 aspect-[3/4] flex-shrink-0 overflow-hidden rounded-md border border-stone-100">
                    <img src={item.image} alt={item.name} className="w-full h-full object-cover" />
                 </div>
                 <div className="flex-1 flex flex-col justify-center min-w-0">
-                  <h4 className="text-sm font-bold text-stone-800 line-clamp-2 leading-tight">{item.name}</h4>
-                   <p className="text-xs text-stone-500 mt-1">
+                  <h4 className="text-xs font-bold text-stone-800 line-clamp-2 leading-tight">{item.name}</h4>
+                   <p className="text-[10px] text-stone-500 mt-0.5">
                     Size: {item.size === 'Free' ? 'Free' : item.size} &bull; Qty: {item.quantity}
                   </p>
-                  <p className="text-sm font-bold text-pink-600 mt-1">
+                  <p className="text-xs font-bold text-pink-600 mt-0.5">
                     ৳{(item.price * item.quantity).toLocaleString('en-IN')}
                   </p>
                 </div>
@@ -106,8 +138,8 @@ const CartPage: React.FC = () => {
           
           <div className="space-y-3 text-sm border-t border-stone-200 pt-4">
             <div className="flex justify-between text-stone-600">
-              <span>Subtotal ({cart.length} unique items)</span>
-              <span>৳{cartTotal.toLocaleString('en-IN')}</span>
+              <span>Subtotal ({cart.length} items)</span>
+              <span className="font-medium">৳{cartTotal.toLocaleString('en-IN')}</span>
             </div>
             <div className="flex justify-between text-stone-600">
               <span>Shipping (Est.)</span>
@@ -120,15 +152,15 @@ const CartPage: React.FC = () => {
             <span className="text-xl font-extrabold text-pink-600">৳{cartTotal.toLocaleString('en-IN')}</span>
           </div>
 
-          <p className="text-xs text-stone-500 mt-3 text-center">Final shipping charge is calculated at checkout.</p>
+          <p className="text-[10px] sm:text-xs text-stone-400 mt-3 text-center">Shipping & taxes calculated at checkout.</p>
           
           <div className="mt-6 space-y-3">
-            <button onClick={() => navigate('/checkout')} className="w-full bg-pink-600 text-white text-base font-bold px-6 py-3 rounded-full hover:bg-pink-700 transition duration-300 shadow flex items-center justify-center space-x-2 active:scale-95">
+            <button onClick={() => navigate('/checkout')} className="w-full bg-pink-600 text-white text-base font-bold px-6 py-3.5 rounded-full hover:bg-pink-700 transition duration-300 shadow flex items-center justify-center space-x-2 active:scale-95">
               <Truck className="w-5 h-5" />
               <span>Proceed to Checkout</span>
             </button>
 
-            <button onClick={() => navigate('/shop')} className="w-full bg-white text-stone-600 border border-stone-300 text-base font-bold px-6 py-3 rounded-full hover:bg-stone-50 hover:text-pink-600 transition duration-300 shadow-sm flex items-center justify-center space-x-2 active:scale-95">
+            <button onClick={() => navigate('/shop')} className="w-full bg-white text-stone-600 border border-stone-300 text-base font-bold px-6 py-3.5 rounded-full hover:bg-stone-50 hover:text-pink-600 transition duration-300 shadow-sm flex items-center justify-center space-x-2 active:scale-95">
               <ArrowLeft className="w-5 h-5" />
               <span>Continue Shopping</span>
             </button>
