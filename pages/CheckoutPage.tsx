@@ -377,7 +377,7 @@ const CheckoutPage: React.FC = () => {
             </div>
             <div className="flex justify-between text-stone-600 border-b border-stone-200 pb-4">
               <span className="font-semibold w-2/3">Shipping ({selectedShippingOption?.label || 'Not selected'})</span>
-              <span>{isOnlinePayment ? '( ✔ )' : `৳${shippingCharge.toLocaleString('en-IN')}`}</span>
+              <span>{isOnlinePayment ? '(Advance)' : `৳${shippingCharge.toLocaleString('en-IN')}`}</span>
             </div>
           </div>
           
