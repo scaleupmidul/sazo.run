@@ -72,10 +72,27 @@ export const useAppStore = create<AppState>()(
                 }
                 const homeData = await homeDataRes.json();
                 
-                // If API returns empty products, fallback to mock data (safety net)
-                const finalProducts = (homeData.products && homeData.products.length > 0) 
-                    ? homeData.products 
-                    : MOCK_PRODUCTS_DATA;
+                let finalProducts: Product[] = [];
+
+                if (homeData.products && homeData.products.length > 0) {
+                    // DATA REPAIR: If using backend data, ensure demo products have their images.
+                    // This fixes the issue where an old DB seed has missing images.
+                    finalProducts = homeData.products.map((p: Product) => {
+                        const mock = MOCK_PRODUCTS_DATA.find(m => m.name === p.name);
+                        // If it matches a mock product name, and has missing images (<3), fill them.
+                        if (mock && (!p.images || p.images.length < 3)) {
+                            const currentImages = p.images || [];
+                            const uniqueMockImages = mock.images.filter(img => !currentImages.includes(img));
+                            const needed = 3 - currentImages.length;
+                            if (uniqueMockImages.length > 0) {
+                                return { ...p, images: [...currentImages, ...uniqueMockImages.slice(0, needed)] };
+                            }
+                        }
+                        return p;
+                    });
+                } else {
+                    finalProducts = MOCK_PRODUCTS_DATA;
+                }
 
                 set({
                     products: finalProducts,
@@ -138,7 +155,23 @@ export const useAppStore = create<AppState>()(
                 if (!res.ok) throw new Error('Failed to fetch all products');
                 let allProducts: Product[] = await res.json();
                 
-                if (allProducts.length === 0) allProducts = MOCK_PRODUCTS_DATA;
+                // Apply same Data Repair logic
+                if (allProducts.length > 0) {
+                     allProducts = allProducts.map((p: Product) => {
+                        const mock = MOCK_PRODUCTS_DATA.find(m => m.name === p.name);
+                        if (mock && (!p.images || p.images.length < 3)) {
+                            const currentImages = p.images || [];
+                            const uniqueMockImages = mock.images.filter(img => !currentImages.includes(img));
+                            const needed = 3 - currentImages.length;
+                            if (uniqueMockImages.length > 0) {
+                                return { ...p, images: [...currentImages, ...uniqueMockImages.slice(0, needed)] };
+                            }
+                        }
+                        return p;
+                    });
+                } else {
+                    allProducts = MOCK_PRODUCTS_DATA;
+                }
 
                 const productMap = new Map<string, Product>();
                 existingProducts.forEach(p => productMap.set(p.id, p));
