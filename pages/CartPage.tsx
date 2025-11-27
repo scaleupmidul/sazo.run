@@ -111,7 +111,7 @@ const CartPage: React.FC = () => {
   }
 
   return (
-    <main className="max-w-screen-2xl mx-auto px-3 sm:px-6 lg:px-8 pt-4 sm:pt-12 pb-12">
+    <main className="max-w-screen-2xl mx-auto px-2 sm:px-6 lg:px-8 pt-4 sm:pt-12 pb-12">
       <h2 className="text-2xl sm:text-4xl font-bold text-stone-900 mb-6 sm:mb-8 text-center">Your Shopping Cart</h2>
       
       <div className="lg:grid lg:grid-cols-12 lg:gap-8 items-start">
@@ -124,7 +124,7 @@ const CartPage: React.FC = () => {
         </div>
 
         {/* Summary Column */}
-        <div className="lg:col-span-4 bg-white p-5 sm:p-6 rounded-xl shadow-lg border border-stone-200 lg:sticky top-24 h-fit">
+        <div className="lg:col-span-4 bg-white p-4 sm:p-6 rounded-xl shadow-lg border border-stone-200 lg:sticky top-24 h-fit">
           <h3 className="text-lg sm:text-xl font-bold text-stone-900 mb-4 sm:mb-6">Order Summary</h3>
           
           {/* Detailed Items List in Summary - Hidden on mobile, shown on desktop for reference */}
