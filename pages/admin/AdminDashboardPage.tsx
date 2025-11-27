@@ -1,7 +1,6 @@
-
-import React from 'react';
+import React, { useState } from 'react';
 import { Order } from '../../types';
-import { ShoppingBag, ListOrdered, DollarSign, CreditCard } from 'lucide-react';
+import { ShoppingBag, ListOrdered, DollarSign, CreditCard, RefreshCw } from 'lucide-react';
 import { useAppStore } from '../../store';
 
 const getStatusColor = (status: Order['status']) => {
@@ -27,7 +26,8 @@ const StatCard: React.FC<{ title: string, value: string, icon: React.ElementType
 );
 
 const AdminDashboardPage: React.FC = () => {
-    const { products, orders, navigate, dashboardStats } = useAppStore();
+    const { products, orders, navigate, dashboardStats, loadInitialData } = useAppStore();
+    const [isRefreshing, setIsRefreshing] = useState(false);
     
     // Use server-side stats if available for 100% accuracy across all records
     // Fallback to 0 if loading or not set
@@ -45,10 +45,26 @@ const AdminDashboardPage: React.FC = () => {
         .sort((a, b) => new Date(b.date).getTime() - new Date(a.date).getTime())
         .slice(0, 5);
 
+    const handleRefresh = async () => {
+        setIsRefreshing(true);
+        await loadInitialData();
+        setIsRefreshing(false);
+    };
 
     return (
         <div>
-            <h1 className="text-3xl font-bold text-gray-800 mb-6">Dashboard</h1>
+            <div className="flex items-center gap-4 mb-6">
+                <h1 className="text-3xl font-bold text-gray-800">Dashboard</h1>
+                <button 
+                    onClick={handleRefresh} 
+                    disabled={isRefreshing}
+                    className="p-2 bg-white border border-gray-200 text-gray-600 hover:bg-pink-50 hover:text-pink-600 rounded-full transition-all shadow-sm active:scale-95 disabled:opacity-50 disabled:cursor-not-allowed"
+                    title="Refresh Data"
+                >
+                    <RefreshCw className={`w-5 h-5 ${isRefreshing ? 'animate-spin' : ''}`} />
+                </button>
+            </div>
+
             <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
                 <StatCard title="Total Products" value={totalProductsCount.toLocaleString()} icon={ShoppingBag} />
                 <StatCard title="Total Orders" value={totalOrdersCount.toLocaleString()} icon={ListOrdered} />
