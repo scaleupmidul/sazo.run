@@ -1,4 +1,3 @@
-
 import React, { useState, useMemo, useEffect } from 'react';
 import { Order, CartItem, OrderStatus } from '../../types';
 import { Search, X, Trash2, RefreshCw } from 'lucide-react';
@@ -38,6 +37,10 @@ const OrderDetailsModal: React.FC<OrderDetailsModalProps> = ({ order, onClose, u
     // Display ID: Use orderId if available, otherwise fallback to system id
     const displayId = order.orderId || order.id;
 
+    // Calculate financials
+    const productTotal = order.cartItems?.reduce((sum, item) => sum + (item.price * item.quantity), 0) || 0;
+    const deliveryCharge = order.shippingCharge ?? 0;
+
     return (
         <div className="fixed inset-0 bg-black bg-opacity-50 z-50 flex items-center justify-center p-4">
             <div className="bg-white rounded-lg shadow-xl w-full max-w-2xl flex flex-col max-h-[90vh]">
@@ -46,47 +49,65 @@ const OrderDetailsModal: React.FC<OrderDetailsModalProps> = ({ order, onClose, u
                     <button onClick={onClose} className="p-2 rounded-full hover:bg-gray-100"><X className="w-5 h-5"/></button>
                 </div>
                 <div className="p-6 space-y-6 overflow-y-auto text-black">
-                    <div>
-                        <h3 className="font-semibold text-pink-600 mb-2">Customer Information</h3>
-                        <p><span className="font-semibold">Name:</span> {order.customerName}</p>
-                        <p><span className="font-semibold">Phone:</span> {order.phone}</p>
-                        <p><span className="font-semibold">Address:</span> {`${order.address}, ${order.city}`}</p>
+                    <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+                        <div>
+                            <h3 className="font-semibold text-pink-600 mb-2">Customer Information</h3>
+                            <p className="text-sm"><span className="font-semibold">Name:</span> {order.customerName}</p>
+                            <p className="text-sm"><span className="font-semibold">Phone:</span> {order.phone}</p>
+                            <p className="text-sm"><span className="font-semibold">Address:</span> {`${order.address}, ${order.city}`}</p>
+                        </div>
+                        <div>
+                            <h3 className="font-semibold text-pink-600 mb-2">Order Status & Payment</h3>
+                            <div className="space-y-3">
+                                <select value={order.status} onChange={handleStatusChange} className="p-2 border rounded-lg w-full bg-white text-black text-sm">
+                                    <option value="Pending">Pending</option>
+                                    <option value="Confirmed">Confirmed</option>
+                                    <option value="Shipped">Shipped</option>
+                                    <option value="Delivered">Delivered</option>
+                                    <option value="Cancelled">Cancelled</option>
+                                </select>
+                                <p className="text-sm">
+                                    <span className="font-semibold">Method:</span> {order.paymentMethod}
+                                    {order.paymentMethod === 'Online' && order.paymentDetails && (
+                                        <span className="block text-xs text-gray-500 mt-1">
+                                            {order.paymentDetails.method} | TxID: {order.paymentDetails.transactionId}
+                                        </span>
+                                    )}
+                                </p>
+                            </div>
+                        </div>
                     </div>
-                     <div>
-                        <h3 className="font-semibold text-pink-600 mb-2">Order Status</h3>
-                        <select value={order.status} onChange={handleStatusChange} className="p-2 border rounded-lg w-full md:w-1/2 bg-white text-black">
-                            <option value="Pending">Pending</option>
-                            <option value="Confirmed">Confirmed</option>
-                            <option value="Shipped">Shipped</option>
-                            <option value="Delivered">Delivered</option>
-                            <option value="Cancelled">Cancelled</option>
-                        </select>
-                    </div>
+                    
                     <div>
                         <h3 className="font-semibold text-pink-600 mb-2">Items Ordered</h3>
-                        <div className="space-y-2">
+                        <div className="space-y-2 border-t border-gray-100 pt-2">
                         {(order.cartItems || []).map((item: CartItem) => (
-                            <div key={item.id} className="flex items-center space-x-4 border-b pb-2">
-                                <img src={item.image} alt={item.name} className="w-16 h-16 object-cover rounded"/>
+                            <div key={item.id} className="flex items-center space-x-4 border-b border-gray-50 pb-2 last:border-0">
+                                <img src={item.image} alt={item.name} className="w-12 h-12 object-cover rounded"/>
                                 <div className="flex-1">
-                                    <p className="font-semibold">{item.name}</p>
+                                    <p className="font-semibold text-sm">{item.name}</p>
                                     <p className="text-xs text-gray-500">Size: {item.size} | Qty: {item.quantity}</p>
                                 </div>
-                                <p className="font-semibold">৳{(item.price * item.quantity).toLocaleString()}</p>
+                                <p className="font-semibold text-sm">৳{(item.price * item.quantity).toLocaleString()}</p>
                             </div>
                         ))}
                         </div>
-                        <div className="text-right mt-4 font-bold text-lg">
-                            Total: ৳{order.total.toLocaleString()}
+                        
+                        <div className="mt-4 space-y-1 text-right text-sm">
+                            <div className="text-gray-600">Subtotal (Products): <span className="font-medium text-gray-900">৳{productTotal.toLocaleString()}</span></div>
+                            <div className="text-gray-600">Delivery Charge: <span className="font-medium text-gray-900">৳{deliveryCharge.toLocaleString()}</span></div>
+                            <div className="font-bold text-lg text-pink-600 border-t inline-block pt-1 mt-1">
+                                Total Amount: ৳{order.total.toLocaleString()}
+                            </div>
                         </div>
                     </div>
                 </div>
                 <div className="p-4 bg-gray-50 border-t flex justify-between items-center">
-                    <button onClick={handleDelete} className="bg-red-600 text-white px-4 py-2 rounded-lg hover:bg-red-700 transition flex items-center space-x-2">
+                    <button onClick={handleDelete} className="bg-red-600 text-white px-4 py-2 rounded-lg hover:bg-red-700 transition flex items-center space-x-2 text-sm">
                         <Trash2 className="w-4 h-4"/>
                         <span>Delete Order</span>
                     </button>
-                    <button onClick={onClose} className="bg-gray-300 text-black px-4 py-2 rounded-lg hover:bg-gray-400 transition">
+                    <button onClick={onClose} className="bg-gray-300 text-black px-4 py-2 rounded-lg hover:bg-gray-400 transition text-sm">
                         Close
                     </button>
                 </div>
@@ -111,17 +132,13 @@ const AdminOrdersPage: React.FC = () => {
   }, [markOrdersAsSeen]);
 
   useEffect(() => {
-    // This effect syncs the selected order with the main orders list.
-    // This is crucial for reflecting status updates in the modal in real-time.
     if (selectedOrder) {
       const updatedOrderInList = orders.find(o => o.id === selectedOrder.id);
       if (updatedOrderInList) {
-        // Only update state if the order data has actually changed to prevent infinite loops.
         if (JSON.stringify(updatedOrderInList) !== JSON.stringify(selectedOrder)) {
             setSelectedOrder(updatedOrderInList);
         }
       } else {
-        // If the order is no longer in the list (e.g., deleted), close the modal.
         setSelectedOrder(null);
       }
     }
@@ -135,7 +152,6 @@ const AdminOrdersPage: React.FC = () => {
   const handleRefresh = async () => {
       setIsRefreshing(true);
       await refreshOrders();
-      // Mark orders as seen after refresh since user is already on the page
       markOrdersAsSeen();
       setIsRefreshing(false);
   };
@@ -143,17 +159,14 @@ const AdminOrdersPage: React.FC = () => {
   const filteredOrders = useMemo(() => {
     return orders.filter(order => 
       (order.customerName?.toLowerCase() || '').includes(searchTerm.toLowerCase()) ||
-      (order.orderId || order.id || '').toLowerCase().includes(searchTerm.toLowerCase()) // Search by new numeric ID too
+      (order.orderId || order.id || '').toLowerCase().includes(searchTerm.toLowerCase())
     ).sort((a, b) => {
-        // Sort by Date Descending (Newest first)
-        // Use createdAt for better precision if available, otherwise fallback to date string
         const timeA = a.createdAt ? new Date(a.createdAt).getTime() : new Date(a.date).getTime();
         const timeB = b.createdAt ? new Date(b.createdAt).getTime() : new Date(b.date).getTime();
         
         const dateComparison = timeB - timeA;
         if (dateComparison !== 0) return dateComparison;
         
-        // Fallback to ID Descending
         return b.id.localeCompare(a.id);
     });
   }, [orders, searchTerm]);
@@ -169,7 +182,6 @@ const AdminOrdersPage: React.FC = () => {
       const dateSource = order.createdAt || order.date;
       const date = new Date(dateSource);
       
-      // If date is invalid (e.g. parsing issue), return original string
       if (isNaN(date.getTime())) {
           return { date: order.date, time: '' };
       }
@@ -181,7 +193,6 @@ const AdminOrdersPage: React.FC = () => {
           timeZone: 'Asia/Dhaka'
       });
       
-      // If we only have the YYYY-MM-DD string (no time), don't show arbitrary time
       const hasTime = !!order.createdAt;
       const timeStr = hasTime ? date.toLocaleTimeString('en-US', { 
           hour: '2-digit', 
@@ -226,13 +237,17 @@ const AdminOrdersPage: React.FC = () => {
                         <th scope="col" className="px-6 py-3">Order ID</th>
                         <th scope="col" className="px-6 py-3">Customer</th>
                         <th scope="col" className="px-6 py-3">Date</th>
-                        <th scope="col" className="px-6 py-3">Total</th>
+                        <th scope="col" className="px-6 py-3">Delivery</th>
+                        <th scope="col" className="px-6 py-3">Products Total</th>
                         <th scope="col" className="px-6 py-3">Status</th>
                     </tr>
                 </thead>
                 <tbody>
                     {paginatedOrders.map(order => {
                         const { date, time } = formatOrderDateTime(order);
+                        const productTotal = order.cartItems?.reduce((sum, item) => sum + (item.price * item.quantity), 0) || 0;
+                        const deliveryCharge = order.shippingCharge ?? 0;
+
                         return (
                             <tr key={order.id} className="bg-white border-b hover:bg-gray-50 cursor-pointer" onClick={() => setSelectedOrder(order)}>
                                 <td className="px-6 py-4 font-medium text-gray-900">{order.orderId || order.id}</td>
@@ -244,7 +259,8 @@ const AdminOrdersPage: React.FC = () => {
                                     <div className="font-medium text-gray-900">{date}</div>
                                     {time && <div className="text-xs text-gray-500">{time}</div>}
                                 </td>
-                                <td className="px-6 py-4">৳{order.total.toLocaleString()}</td>
+                                <td className="px-6 py-4 font-medium text-gray-600">৳{deliveryCharge.toLocaleString()}</td>
+                                <td className="px-6 py-4 font-bold text-pink-600">৳{productTotal.toLocaleString()}</td>
                                 <td className="px-6 py-4">
                                     <span className={`px-2 py-1 text-xs font-semibold rounded-full ${getStatusColor(order.status)}`}>
                                         {order.status}
@@ -255,7 +271,7 @@ const AdminOrdersPage: React.FC = () => {
                     })}
                     {paginatedOrders.length === 0 && (
                         <tr>
-                            <td colSpan={5} className="text-center py-8 text-gray-500">
+                            <td colSpan={6} className="text-center py-8 text-gray-500">
                                 No orders found.
                             </td>
                         </tr>
