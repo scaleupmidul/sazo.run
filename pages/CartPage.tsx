@@ -111,8 +111,8 @@ const CartPage: React.FC = () => {
   }
 
   return (
-    <main className="max-w-screen-2xl mx-auto px-2 sm:px-6 lg:px-8 pt-4 sm:pt-12 pb-12">
-      <h2 className="text-2xl sm:text-4xl font-bold text-stone-900 mb-6 sm:mb-8 text-center">Your Shopping Cart</h2>
+    <main className="max-w-screen-2xl mx-auto px-1 sm:px-6 lg:px-8 pt-3 sm:pt-12 pb-12">
+      <h2 className="text-2xl sm:text-4xl font-bold text-stone-900 mb-4 sm:mb-8 text-center">Your Shopping Cart</h2>
       
       <div className="lg:grid lg:grid-cols-12 lg:gap-8 items-start">
         {/* Cart Items Column */}
