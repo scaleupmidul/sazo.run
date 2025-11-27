@@ -1,3 +1,5 @@
+// pages/CartPage.tsx
+
 import React, { useEffect } from 'react';
 import { CartItem } from '../types';
 import { ShoppingCart, Truck, X, ArrowLeft, Plus, Minus } from 'lucide-react';
@@ -11,7 +13,7 @@ const CartItemComponent: React.FC<{ item: CartItem, updateCartQuantity: (id: str
     transition-all duration-300 hover:shadow-md lg:hover:shadow-none lg:hover:bg-stone-50/30
   ">
     
-    {/* Image Section - Increased size for better visibility */}
+    {/* Image Section */}
     <div className="w-24 sm:w-28 lg:w-32 aspect-[3/4] flex-shrink-0 overflow-hidden rounded-lg border border-stone-100 bg-stone-50 shadow-sm">
       <img src={item.image} alt={item.name} className="w-full h-full object-cover transition-transform duration-500 group-hover:scale-105" />
     </div>
@@ -37,24 +39,25 @@ const CartItemComponent: React.FC<{ item: CartItem, updateCartQuantity: (id: str
         </button>
       </div>
 
-      {/* Bottom: Price & Quantity */}
-      <div className="flex items-end justify-between mt-4 pt-3 border-t border-dashed border-stone-100 lg:border-none lg:pt-0 lg:mt-2">
-        <div className="flex flex-col">
+      {/* Bottom: Price & Quantity - Added gap-3 and shrink control to prevent overlap */}
+      <div className="flex items-end justify-between mt-4 pt-3 border-t border-dashed border-stone-100 lg:border-none lg:pt-0 lg:mt-2 gap-3">
+        <div className="flex flex-col min-w-0">
             <span className="text-xs text-stone-400 font-bold uppercase tracking-wider mb-0.5">Total</span>
-            <span className="text-xl font-extrabold text-pink-600 leading-none">৳{(item.price * item.quantity).toLocaleString('en-IN')}</span>
+            <span className="text-xl font-extrabold text-pink-600 leading-none whitespace-nowrap">৳{(item.price * item.quantity).toLocaleString('en-IN')}</span>
         </div>
 
-        <div className="flex items-center bg-white border border-stone-200 rounded-lg h-10 shadow-sm">
+        {/* Quantity Controller - Slightly more compact on mobile (w-9) to allow space for price */}
+        <div className="flex items-center bg-white border border-stone-200 rounded-lg h-9 sm:h-10 shadow-sm flex-shrink-0">
           <button 
             onClick={() => updateCartQuantity(item.id, item.size, item.quantity - 1)} 
-            className="w-10 h-full flex items-center justify-center text-stone-500 hover:text-pink-600 active:bg-pink-50 rounded-l-lg transition border-r border-stone-100 hover:bg-pink-50"
+            className="w-9 sm:w-10 h-full flex items-center justify-center text-stone-500 hover:text-pink-600 active:bg-pink-50 rounded-l-lg transition border-r border-stone-100 hover:bg-pink-50"
           >
             <Minus className="w-4 h-4" />
           </button>
-          <span className="w-10 text-center font-bold text-base text-stone-800 select-none">{item.quantity}</span>
+          <span className="w-9 sm:w-10 text-center font-bold text-base text-stone-800 select-none">{item.quantity}</span>
           <button 
             onClick={() => updateCartQuantity(item.id, item.size, item.quantity + 1)} 
-            className="w-10 h-full flex items-center justify-center text-stone-500 hover:text-pink-600 active:bg-pink-50 rounded-r-lg transition border-l border-stone-100 hover:bg-pink-50"
+            className="w-9 sm:w-10 h-full flex items-center justify-center text-stone-500 hover:text-pink-600 active:bg-pink-50 rounded-r-lg transition border-l border-stone-100 hover:bg-pink-50"
           >
             <Plus className="w-4 h-4" />
           </button>
