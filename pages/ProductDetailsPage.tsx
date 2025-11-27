@@ -9,7 +9,7 @@ const ProductDetailsPageSkeleton: React.FC = () => (
     <div className="h-6 bg-stone-200 rounded w-32 mb-6 sm:mb-8"></div>
     <div className="lg:grid lg:grid-cols-2 lg:gap-12 bg-white p-4 sm:p-8 rounded-xl shadow-lg border border-stone-200">
       <div className="space-y-4">
-        <div className="aspect-[3/4] bg-stone-200 rounded-xl"></div>
+        <div className="bg-stone-200 rounded-xl" style={{ aspectRatio: '3.5/4' }}></div>
         <div className="flex space-x-3 p-1">
           <div className="w-16 h-16 sm:w-24 sm:h-24 bg-stone-200 rounded-lg"></div>
           <div className="w-16 h-16 sm:w-24 sm:h-24 bg-stone-200 rounded-lg"></div>
@@ -168,7 +168,7 @@ const ProductDetailsPage: React.FC = () => {
         <div className="space-y-4">
           <div 
             className="w-full relative bg-stone-100 rounded-xl overflow-hidden group touch-pan-y"
-            style={{ aspectRatio: '3/4' }}
+            style={{ aspectRatio: '3.5/4' }}
             onTouchStart={onTouchStart}
             onTouchMove={onTouchMove}
             onTouchEnd={onTouchEnd}
