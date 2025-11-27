@@ -55,18 +55,11 @@ const ProductDetailsPage: React.FC = () => {
     loading: state.loading
   }));
 
-  // Force at least 3 images for the gallery layout to look consistent (requested feature)
+  // Display exactly what is available in product.images. 
+  // No automatic duplication/repeating logic.
   const images = useMemo(() => {
     if (!product || !product.images) return [];
-    let imgs = [...product.images];
-    // If we have at least 1 image but less than 3, duplicate the first one to fill the slots
-    // This ensures the 3-image gallery requirement is met visually
-    if (imgs.length > 0 && imgs.length < 3) {
-       while(imgs.length < 3) {
-         imgs.push(imgs[0]); 
-       }
-    }
-    return imgs;
+    return product.images.filter(img => img && img !== "");
   }, [product]);
 
   const sizes = product?.sizes || [];
