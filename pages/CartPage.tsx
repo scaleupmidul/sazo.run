@@ -1,55 +1,63 @@
 
 import React, { useEffect } from 'react';
 import { CartItem } from '../types';
-import { ShoppingCart, Truck, XCircle, ArrowLeft, Plus, Minus } from 'lucide-react';
+import { ShoppingCart, Truck, X, ArrowLeft, Plus, Minus } from 'lucide-react';
 import { useAppStore } from '../store';
 
 const CartItemComponent: React.FC<{ item: CartItem, updateCartQuantity: (id: string, size: string, newQuantity: number) => void }> = ({ item, updateCartQuantity }) => (
-  <div className="group flex gap-3 sm:gap-6 py-4 sm:py-6 border-b border-stone-100 last:border-0 bg-white transition-colors hover:bg-stone-50/30">
+  <div className="
+    group relative flex gap-4 
+    bg-white p-3 sm:p-4 rounded-xl shadow-sm border border-stone-100
+    lg:bg-transparent lg:p-0 lg:rounded-none lg:shadow-none lg:border-0 lg:border-b lg:border-stone-100 lg:py-6 lg:first:pt-0 lg:last:border-0
+    transition-all duration-300 hover:shadow-md lg:hover:shadow-none lg:hover:bg-stone-50/30
+  ">
     
-    {/* Image Section - Fixed width, responsive aspect ratio */}
-    <div className="w-20 sm:w-28 aspect-[3/4] flex-shrink-0 overflow-hidden rounded-lg border border-stone-100 bg-stone-200">
+    {/* Image Section - Wider on mobile now (w-24) */}
+    <div className="w-24 aspect-[3/4] flex-shrink-0 overflow-hidden rounded-lg border border-stone-100 bg-stone-200 lg:w-28">
       <img src={item.image} alt={item.name} className="w-full h-full object-cover transition-transform duration-500 group-hover:scale-105" />
     </div>
 
-    {/* Details Section - Flex column for mobile layout */}
+    {/* Details Section */}
     <div className="flex flex-col flex-1 justify-between min-w-0 py-0.5">
       
       {/* Header: Name & Remove */}
-      <div className="flex justify-between items-start gap-3">
-        <div className="min-w-0 pr-1">
-          <h3 className="text-sm sm:text-base font-bold text-stone-800 line-clamp-2 leading-tight mb-1">{item.name}</h3>
-          <p className="text-xs sm:text-sm text-stone-500 font-medium">Size: <span className="text-stone-900">{item.size === 'Free' ? 'Free Size' : item.size}</span></p>
+      <div className="flex justify-between items-start gap-2">
+        <div className="min-w-0 pr-6">
+          <h3 className="text-base font-bold text-stone-800 line-clamp-2 leading-snug">{item.name}</h3>
+          <p className="text-xs sm:text-sm text-stone-500 font-medium mt-1">
+            Size: <span className="text-stone-900">{item.size === 'Free' ? 'Free Size' : item.size}</span>
+          </p>
         </div>
+        {/* Remove Button - Absolute on mobile for better touch target/positioning */}
         <button 
           onClick={() => updateCartQuantity(item.id, item.size, 0)} 
-          className="text-stone-300 hover:text-red-500 transition-colors p-1 -mr-2 -mt-2 sm:mr-0 sm:mt-0"
+          className="absolute top-3 right-3 lg:static text-stone-400 hover:text-red-500 transition-colors p-1 rounded-full hover:bg-red-50 lg:p-1 lg:hover:bg-transparent"
           aria-label="Remove item"
         >
-          <XCircle className="w-5 h-5 sm:w-6 sm:h-6" />
+          <X className="w-5 h-5" />
         </button>
       </div>
 
       {/* Footer: Price & Quantity */}
       <div className="flex items-end justify-between mt-3">
         <div className="flex flex-col">
-            <span className="text-[10px] sm:text-xs text-stone-400 font-medium">Unit: ৳{item.price.toLocaleString('en-IN')}</span>
-            <span className="text-sm sm:text-lg font-bold text-pink-600">৳{(item.price * item.quantity).toLocaleString('en-IN')}</span>
+            <span className="text-[10px] text-stone-400 font-medium hidden sm:block">Unit: ৳{item.price.toLocaleString('en-IN')}</span>
+            <span className="text-lg font-bold text-pink-600">৳{(item.price * item.quantity).toLocaleString('en-IN')}</span>
         </div>
 
-        <div className="flex items-center bg-white border border-stone-200 rounded-full h-8 sm:h-10 shadow-sm">
+        <div className="flex items-center bg-stone-50 border border-stone-200 rounded-lg h-9 sm:h-10 shadow-sm">
           <button 
             onClick={() => updateCartQuantity(item.id, item.size, item.quantity - 1)} 
-            className="w-8 sm:w-10 h-full flex items-center justify-center text-stone-500 hover:text-pink-600 hover:bg-pink-50 rounded-l-full transition active:bg-pink-100"
+            className="w-9 sm:w-10 h-full flex items-center justify-center text-stone-500 hover:text-pink-600 hover:bg-pink-50 rounded-l-lg transition active:bg-pink-100"
           >
-            <Minus className="w-3 h-3 sm:w-4 sm:h-4" />
+            <Minus className="w-4 h-4" />
           </button>
-          <span className="w-8 sm:w-10 text-center font-bold text-xs sm:text-sm text-stone-800 select-none">{item.quantity}</span>
+          <span className="w-8 sm:w-10 text-center font-bold text-sm text-stone-800 select-none">{item.quantity}</span>
           <button 
             onClick={() => updateCartQuantity(item.id, item.size, item.quantity + 1)} 
-            className="w-8 sm:w-10 h-full flex items-center justify-center text-stone-500 hover:text-pink-600 hover:bg-pink-50 rounded-r-full transition active:bg-pink-100"
+            className="w-9 sm:w-10 h-full flex items-center justify-center text-stone-500 hover:text-pink-600 hover:bg-pink-50 rounded-r-lg transition active:bg-pink-100"
           >
-            <Plus className="w-3 h-3 sm:w-4 sm:h-4" />
+            <Plus className="w-4 h-4" />
           </button>
         </div>
       </div>
@@ -108,8 +116,11 @@ const CartPage: React.FC = () => {
       
       <div className="lg:grid lg:grid-cols-12 lg:gap-8 items-start">
         {/* Cart Items Column */}
-        <div className="lg:col-span-8 bg-white p-4 sm:p-6 rounded-xl shadow-lg border border-stone-200 mb-6 lg:mb-0">
-          {cart.map(item => <CartItemComponent key={`${item.id}-${item.size}`} item={item} updateCartQuantity={updateCartQuantity} />)}
+        <div className="lg:col-span-8 mb-6 lg:mb-0">
+           {/* Mobile: Space between cards. Desktop: White container with dividers */}
+           <div className="space-y-4 lg:space-y-0 lg:bg-white lg:p-6 lg:rounded-xl lg:shadow-lg lg:border lg:border-stone-200">
+              {cart.map(item => <CartItemComponent key={`${item.id}-${item.size}`} item={item} updateCartQuantity={updateCartQuantity} />)}
+           </div>
         </div>
 
         {/* Summary Column */}
