@@ -309,3 +309,4 @@ const ProductDetailsPage: React.FC = () => {
 };
 
 export default ProductDetailsPage;
+ 
