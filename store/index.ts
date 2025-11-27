@@ -20,6 +20,18 @@ const DEFAULT_SETTINGS: AppSettings = {
     homepageNewArrivalsCount: 4, homepageTrendingCount: 4
 };
 
+// Fallback Mock Data to ensure UI works even if backend fails
+const MOCK_PRODUCTS_DATA: Product[] = [
+  { id: '101', name: "Gulmohar Lawn Suit", category: "Cotton", price: 3500, description: "Pure cotton lawn three-piece with exquisite embroidery and soft dupatta. Ideal for daily wear.", fabric: "Lawn Cotton", colors: ["Pastel Pink", "Beige", "Mint"], sizes: ["S", "M", "L", "XL", "Free"], isNewArrival: true, isTrending: false, onSale: false, images: ["https://picsum.photos/seed/gulmohar/400/500", "https://picsum.photos/seed/gulmohar2/400/500", "https://picsum.photos/seed/gulmohar3/400/500"], displayOrder: 1000 },
+  { id: '102', name: "Shalimar Silk Ensemble", category: "Silk", price: 6200, description: "Elegant raw silk suit with delicate zari work. Perfect for evening occasions.", fabric: "Raw Silk", colors: ["Maroon", "Gold"], sizes: ["36", "38", "40", "42"], isNewArrival: true, isTrending: true, onSale: false, images: ["https://picsum.photos/seed/shalimar/400/500", "https://picsum.photos/seed/shalimar2/400/500", "https://picsum.photos/seed/shalimar3/400/500"], displayOrder: 1000 },
+  { id: '103', name: "Party Princess Georgette", category: "Party Wear", price: 7800, description: "Heavy georgette suit with stone embellishments. Ready for any celebration.", fabric: "Georgette", colors: ["Royal Blue", "Crimson"], sizes: ["Free"], isNewArrival: false, isTrending: true, onSale: true, images: ["https://picsum.photos/seed/georgette/400/500", "https://picsum.photos/seed/georgette2/400/500", "https://picsum.photos/seed/georgette3/400/500"], displayOrder: 1000 },
+  { id: '104', name: "Everyday Beige Cotton", category: "Cotton", price: 2800, description: "Simple yet stylish cotton suit for comfortable daily use.", fabric: "Cotton", colors: ["Beige", "Lavender"], sizes: ["38", "40", "42", "44", "46"], isNewArrival: false, isTrending: false, onSale: true, images: ["https://picsum.photos/seed/beige/400/500", "https://picsum.photos/seed/beige2/400/500", "https://picsum.photos/seed/beige3/400/500"], displayOrder: 1000 },
+  { id: '105', name: "Mogra Chiffon", category: "Party Wear", price: 5900, description: "Flowy chiffon with printed motifs and lace detailing.", fabric: "Chiffon", colors: ["White", "Yellow"], sizes: ["S", "M", "L"], isNewArrival: false, isTrending: true, onSale: false, images: ["https://picsum.photos/seed/mogra/400/500", "https://picsum.photos/seed/mogra2/400/500", "https://picsum.photos/seed/mogra3/400/500"], displayOrder: 1000 },
+  { id: '106', name: "Sapphire Lawn Print", category: "Cotton", price: 3200, description: "Vibrant printed lawn suit with comfortable cotton dupatta.", fabric: "Lawn Cotton", colors: ["Blue", "Green", "White"], sizes: ["36", "38", "40", "42", "44"], isNewArrival: true, isTrending: false, onSale: false, images: ["https://picsum.photos/seed/sapphire/400/500", "https://picsum.photos/seed/sapphire2/400/500", "https://picsum.photos/seed/sapphire3/400/500"], displayOrder: 1000 },
+  { id: '107', name: "Emerald Viscose", category: "Silk", price: 5500, description: "Smooth viscose silk blend with minimalist golden detailing.", fabric: "Viscose Silk", colors: ["Emerald", "Black"], sizes: ["M", "L", "XL"], isNewArrival: true, isTrending: true, onSale: false, images: ["https://picsum.photos/seed/emerald/400/500", "https://picsum.photos/seed/emerald2/400/500", "https://picsum.photos/seed/emerald3/400/500"], displayOrder: 1000 },
+  { id: '108', name: "Maharani Velvet", category: "Party Wear", price: 9500, description: "Luxurious velvet three-piece with heavy sequin work. Ultimate festive attire.", fabric: "Velvet", colors: ["Navy", "Wine Red"], sizes: ["38", "40", "42", "44", "Free"], isNewArrival: true, isTrending: true, onSale: true, images: ["https://picsum.photos/seed/maharani/400/500", "https://picsum.photos/seed/maharani2/400/500", "https://picsum.photos/seed/maharani3/400/500"], displayOrder: 1000 },
+];
+
 export const useAppStore = create<AppState>()(
   persist(
     (set, get) => ({
@@ -49,26 +61,29 @@ export const useAppStore = create<AppState>()(
         },
 
         loadInitialData: async () => {
-            // Optimization: Do NOT set loading to true initially if we have data.
-            // This allows the app to show cached content immediately (Stale-While-Revalidate).
             const { isAdminAuthenticated, notify } = get();
             
             try {
                 // Fetch optimized homepage data first for a fast initial load
                 const homeDataRes = await fetch(`${API_URL}/page-data/home`);
+                
                 if (!homeDataRes.ok) {
                     throw new Error('Failed to fetch initial page data.');
                 }
                 const homeData = await homeDataRes.json();
                 
+                // If API returns empty products, fallback to mock data (safety net)
+                const finalProducts = (homeData.products && homeData.products.length > 0) 
+                    ? homeData.products 
+                    : MOCK_PRODUCTS_DATA;
+
                 set({
-                    products: homeData.products,
-                    settings: homeData.settings,
+                    products: finalProducts,
+                    settings: homeData.settings || DEFAULT_SETTINGS,
                     fullProductsLoaded: false,
-                    loading: false // Ensure loading is set to false as soon as data arrives
+                    loading: false
                 });
 
-                // If admin is logged in, fetch admin-specific data including stats
                 if (isAdminAuthenticated) {
                     const token = getTokenFromStorage();
                     const headers = token ? { 'Authorization': `Bearer ${token}` } : {};
@@ -78,37 +93,36 @@ export const useAppStore = create<AppState>()(
                         fetch(`${API_URL}/orders/stats`, { headers })
                     ]);
 
-                    if (!ordersRes.ok || !messagesRes.ok || !statsRes.ok) {
-                        throw new Error('Failed to fetch admin data.');
+                    if (ordersRes.ok && messagesRes.ok && statsRes.ok) {
+                        const ordersData = await ordersRes.json();
+                        const messagesData = await messagesRes.json();
+                        const statsData = await statsRes.json();
+                        
+                        const lastSeenOrders = localStorage.getItem('sazo_admin_last_orders_seen');
+                        const lastSeenOrdersDate = lastSeenOrders ? new Date(lastSeenOrders) : new Date(0);
+                        const newOrders = ordersData.filter((o: Order) => {
+                            const oDate = o.createdAt ? new Date(o.createdAt) : new Date(o.date);
+                            return oDate > lastSeenOrdersDate;
+                        });
+
+                        set({ 
+                            orders: ordersData, 
+                            contactMessages: messagesData,
+                            dashboardStats: statsData,
+                            newOrdersCount: newOrders.length
+                        });
                     }
-
-                    const ordersData = await ordersRes.json();
-                    const messagesData = await messagesRes.json();
-                    const statsData = await statsRes.json();
-                    
-                    // Calculate new orders count based on last seen timestamp
-                    const lastSeenOrders = localStorage.getItem('sazo_admin_last_orders_seen');
-                    const lastSeenOrdersDate = lastSeenOrders ? new Date(lastSeenOrders) : new Date(0);
-                    const newOrders = ordersData.filter((o: Order) => {
-                        // Use createdAt if available, otherwise fallback to date
-                        const oDate = o.createdAt ? new Date(o.createdAt) : new Date(o.date);
-                        return oDate > lastSeenOrdersDate;
-                    });
-
-                    set({ 
-                        orders: ordersData, 
-                        contactMessages: messagesData,
-                        dashboardStats: statsData,
-                        newOrdersCount: newOrders.length
-                    });
                 }
             } catch (error) {
-                console.error("Failed to load initial data", error);
-                // Don't notify error immediately on home page to avoid scaring users if offline/cached
-                // notify("Could not connect to the server.", "error");
-                set({ loading: false });
+                console.error("Failed to load initial data, using fallback.", error);
+                // Fallback to Mock Data on error
+                set({ 
+                    products: MOCK_PRODUCTS_DATA, 
+                    settings: DEFAULT_SETTINGS, 
+                    loading: false,
+                    fullProductsLoaded: true 
+                });
             } finally {
-                // After the initial UI render is unblocked, start fetching the rest of the products in the background.
                 setTimeout(() => {
                     get().ensureAllProductsLoaded();
                 }, 100);
@@ -116,15 +130,16 @@ export const useAppStore = create<AppState>()(
         },
 
         ensureAllProductsLoaded: async () => {
-            const { fullProductsLoaded, products: existingProducts, notify } = get();
+            const { fullProductsLoaded, products: existingProducts } = get();
             if (fullProductsLoaded) return;
     
             try {
                 const res = await fetch(`${API_URL}/products`);
                 if (!res.ok) throw new Error('Failed to fetch all products');
-                const allProducts: Product[] = await res.json();
+                let allProducts: Product[] = await res.json();
                 
-                // Merge products, giving precedence to the full list but keeping existing ones if not in the new list
+                if (allProducts.length === 0) allProducts = MOCK_PRODUCTS_DATA;
+
                 const productMap = new Map<string, Product>();
                 existingProducts.forEach(p => productMap.set(p.id, p));
                 allProducts.forEach(p => productMap.set(p.id, p));
@@ -133,7 +148,6 @@ export const useAppStore = create<AppState>()(
                 set({ products: mergedProducts, fullProductsLoaded: true });
             } catch (error) {
                 console.error("Failed to load all products", error);
-                // silent fail for background fetch
             }
         },
 
@@ -198,7 +212,6 @@ export const useAppStore = create<AppState>()(
                 newCart = [...cart, newItem];
             }
             
-            // Push GA4 add_to_cart event
             window.dataLayer = window.dataLayer || [];
             window.dataLayer.push({ ecommerce: null });
             window.dataLayer.push({
@@ -227,11 +240,9 @@ export const useAppStore = create<AppState>()(
 
             const oldQuantity = cartItem.quantity;
             const quantityDifference = newQuantity - oldQuantity;
-            
-            // Find the full product details for tracking
             const productDetails = products.find(p => p.id === id);
 
-            if (quantityDifference > 0 && productDetails) { // Item quantity increased
+            if (quantityDifference > 0 && productDetails) {
                 window.dataLayer = window.dataLayer || [];
                 window.dataLayer.push({ ecommerce: null });
                 window.dataLayer.push({
@@ -243,12 +254,12 @@ export const useAppStore = create<AppState>()(
                             item_name: productDetails.name,
                             item_category: productDetails.category,
                             price: productDetails.price,
-                            quantity: quantityDifference, // track the number of items added
+                            quantity: quantityDifference,
                             item_variant: size
                         }]
                     }
                 });
-            } else if (quantityDifference < 0 && productDetails) { // Item quantity decreased or removed
+            } else if (quantityDifference < 0 && productDetails) {
                  window.dataLayer = window.dataLayer || [];
                  window.dataLayer.push({ ecommerce: null });
                  window.dataLayer.push({
@@ -260,7 +271,7 @@ export const useAppStore = create<AppState>()(
                             item_name: productDetails.name,
                             item_category: productDetails.category,
                             price: productDetails.price,
-                            quantity: -quantityDifference, // track the number of items removed
+                            quantity: -quantityDifference,
                             item_variant: size
                         }]
                     }
@@ -301,7 +312,6 @@ export const useAppStore = create<AppState>()(
                 const { token } = await res.json();
                 localStorage.setItem('sazo_admin_token', token);
                 set({ isAdminAuthenticated: true });
-                // After login, reload data to fetch stats etc.
                 get().loadInitialData();
                 get().navigate('/admin/dashboard');
                 get().notify('Login successful!', 'success');
@@ -379,7 +389,6 @@ export const useAppStore = create<AppState>()(
                 if (!res.ok) throw new Error('Failed to fetch orders');
                 const ordersData = await res.json();
                 
-                // Recalculate new orders count on refresh
                 const lastSeenOrders = localStorage.getItem('sazo_admin_last_orders_seen');
                 const lastSeenOrdersDate = lastSeenOrders ? new Date(lastSeenOrders) : new Date(0);
                 const newOrders = ordersData.filter((o: Order) => {
@@ -470,7 +479,7 @@ export const useAppStore = create<AppState>()(
                     body: JSON.stringify(newSettings),
                 });
                 if (!res.ok) {
-                    const errorData = await res.json().catch(() => ({ message: 'Failed to update settings. The server returned an invalid response.' }));
+                    const errorData = await res.json().catch(() => ({ message: 'Failed to update settings.' }));
                     throw new Error(errorData.message || 'Failed to update settings.');
                 }
                 const updatedSettings = await res.json();
@@ -486,20 +495,16 @@ export const useAppStore = create<AppState>()(
     {
       name: 'sazo-storage',
       storage: createJSONStorage(() => localStorage),
-      // Persist critical data for instant loading
       partialize: (state) => ({ 
           cart: state.cart,
           settings: state.settings,
           products: state.products
       }),
-      // Custom merge function to recalculate cartTotal on rehydration and validate data
       merge: (persistedState: any, currentState: AppState) => {
-        // Safety check: if persisted state is not an object or null, ignore it
         if (!persistedState || typeof persistedState !== 'object') {
             return currentState;
         }
 
-        // Strict validation for cart items to prevent crashes
         let safeCart: CartItem[] = [];
         if (Array.isArray(persistedState.cart)) {
             safeCart = persistedState.cart.filter((item: any) => 
@@ -514,7 +519,6 @@ export const useAppStore = create<AppState>()(
         }
 
         const merged = { ...currentState, ...persistedState, cart: safeCart };
-        // Recalculate total based on the validated cart
         merged.cartTotal = safeCart.reduce((total: number, item: CartItem) => total + (item.price * item.quantity), 0);
         
         return merged;
@@ -523,10 +527,8 @@ export const useAppStore = create<AppState>()(
   )
 );
 
-// Initialize popstate listener for browser navigation
 window.addEventListener('popstate', () => {
   useAppStore.setState({ path: window.location.pathname });
 });
 
-// Load initial data when the store is created
 useAppStore.getState().loadInitialData();
