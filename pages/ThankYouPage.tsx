@@ -1,4 +1,3 @@
-
 import React, { useEffect, useState } from 'react';
 import { useAppStore } from '../store';
 import { CheckCircle, ShoppingBag, ArrowRight, Copy, Printer, MapPin, CreditCard, Home } from 'lucide-react';
@@ -55,7 +54,18 @@ const ThankYouPage: React.FC<ThankYouPageProps> = ({ orderId }) => {
 
     useEffect(() => {
         if (order) {
-            const shippingCharge = order.total - (order.cartItems || []).reduce((acc, item) => acc + item.price * item.quantity, 0);
+            // Calculate item subtotal for fallback/reference
+            const itemSubtotal = (order.cartItems || []).reduce((acc, item) => acc + item.price * item.quantity, 0);
+            
+            // CORRECT SHIPPING LOGIC:
+            // Use the explicitly saved `shippingCharge` from the order database.
+            // This ensures that even if payment is "Online" (where total doesn't include shipping),
+            // the Data Layer still receives the correct shipping fee selected by the user.
+            // Fallback to (Total - Subtotal) only if shippingCharge is missing (legacy orders).
+            const shippingValue = order.shippingCharge !== undefined 
+                ? order.shippingCharge 
+                : Math.max(0, order.total - itemSubtotal);
+
             window.dataLayer = window.dataLayer || [];
             
             window.dataLayer.push({
@@ -63,7 +73,7 @@ const ThankYouPage: React.FC<ThankYouPageProps> = ({ orderId }) => {
                 ecommerce: {
                     transaction_id: order.orderId || order.id,
                     value: order.total,
-                    shipping: shippingCharge,
+                    shipping: shippingValue,
                     currency: 'BDT',
                     items: (order.cartItems || []).map(item => ({
                         item_id: item.id,
@@ -126,6 +136,9 @@ const ThankYouPage: React.FC<ThankYouPageProps> = ({ orderId }) => {
     }
 
     const subtotal = (order.cartItems || []).reduce((sum, item) => sum + (item.price * item.quantity), 0);
+    // Display logic only: If Online payment, shipping is paid in advance, so effectively 0 relative to total payable.
+    // However, we still show the calculated amount if needed, or use the explicit charge for display if logic requires.
+    // Here we stick to the mathematical derivation for the receipt view:
     const shipping = order.total - subtotal;
     const displayOrderId = order.orderId || order.id;
     const isOnlinePayment = order.paymentMethod === 'Online';
@@ -220,7 +233,8 @@ const ThankYouPage: React.FC<ThankYouPageProps> = ({ orderId }) => {
                             </div>
                             <div className="flex justify-between text-stone-600">
                                 <span>Shipping</span>
-                                <span className="font-medium">{isOnlinePayment ? '( ✔ )' : `৳${shipping.toLocaleString('en-IN')}`}</span>
+                                {/* This visual display logic remains as is for the receipt view */}
+                                <span className="font-medium">{isOnlinePayment ? '(Advance)' : `৳${shipping.toLocaleString('en-IN')}`}</span>
                             </div>
                         </div>
                         
@@ -298,4 +312,3 @@ const ThankYouPage: React.FC<ThankYouPageProps> = ({ orderId }) => {
 };
 
 export default ThankYouPage;
-   
