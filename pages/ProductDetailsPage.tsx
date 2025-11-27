@@ -1,3 +1,4 @@
+
 import React, { useState, useEffect, useCallback, useMemo } from 'react';
 import { Product } from '../types';
 import { ShoppingCart, ChevronDown, X, ChevronLeft, ChevronRight } from 'lucide-react';
@@ -166,7 +167,8 @@ const ProductDetailsPage: React.FC = () => {
       <div className="lg:grid lg:grid-cols-2 lg:gap-12 bg-white p-4 sm:p-8 rounded-xl shadow-lg border border-stone-200">
         <div className="space-y-4">
           <div 
-            className="aspect-[3/4] overflow-hidden rounded-xl relative group bg-stone-100 touch-pan-y"
+            className="w-full relative bg-stone-100 rounded-xl overflow-hidden group touch-pan-y"
+            style={{ aspectRatio: '3/4' }}
             onTouchStart={onTouchStart}
             onTouchMove={onTouchMove}
             onTouchEnd={onTouchEnd}
@@ -175,10 +177,10 @@ const ProductDetailsPage: React.FC = () => {
                 <img 
                     src={selectedImage} 
                     alt={product.name} 
-                    className="w-full h-full object-cover transition-opacity duration-300" 
+                    className="absolute inset-0 w-full h-full object-cover transition-opacity duration-300" 
                 />
             ) : (
-                 <div className="w-full h-full flex items-center justify-center text-stone-400">No Image Available</div>
+                 <div className="absolute inset-0 w-full h-full flex items-center justify-center text-stone-400">No Image Available</div>
             )}
 
             {/* Navigation Arrows (Show only if multiple images) */}
@@ -186,14 +188,14 @@ const ProductDetailsPage: React.FC = () => {
                 <>
                     <button 
                         onClick={(e) => { e.stopPropagation(); handlePrevImage(); }}
-                        className="hidden sm:flex absolute left-3 top-1/2 -translate-y-1/2 bg-white/80 hover:bg-white text-stone-800 p-2 rounded-full shadow-md opacity-0 group-hover:opacity-100 transition-all duration-300 active:scale-95"
+                        className="hidden sm:flex absolute left-3 top-1/2 -translate-y-1/2 bg-white/80 hover:bg-white text-stone-800 p-2 rounded-full shadow-md opacity-0 group-hover:opacity-100 transition-all duration-300 active:scale-95 z-20"
                         aria-label="Previous image"
                     >
                         <ChevronLeft className="w-6 h-6" />
                     </button>
                     <button 
                         onClick={(e) => { e.stopPropagation(); handleNextImage(); }}
-                        className="hidden sm:flex absolute right-3 top-1/2 -translate-y-1/2 bg-white/80 hover:bg-white text-stone-800 p-2 rounded-full shadow-md opacity-0 group-hover:opacity-100 transition-all duration-300 active:scale-95"
+                        className="hidden sm:flex absolute right-3 top-1/2 -translate-y-1/2 bg-white/80 hover:bg-white text-stone-800 p-2 rounded-full shadow-md opacity-0 group-hover:opacity-100 transition-all duration-300 active:scale-95 z-20"
                          aria-label="Next image"
                     >
                         <ChevronRight className="w-6 h-6" />
@@ -216,13 +218,17 @@ const ProductDetailsPage: React.FC = () => {
           {images.length > 0 && (
               <div className="flex space-x-3 overflow-x-auto p-1 scrollbar-hide">
                 {images.map((img, index) => (
-                  <img
+                  <div 
                     key={index}
-                    src={img}
-                    alt={`Thumbnail ${index + 1}`}
-                    className={`w-16 h-16 sm:w-20 sm:h-20 object-cover rounded-lg cursor-pointer transition duration-300 border-2 ${index === currentImageIndex ? 'border-pink-600 ring-2 ring-pink-100 scale-105' : 'border-transparent opacity-70 hover:opacity-100 hover:border-stone-200'}`}
+                    className={`relative w-16 h-16 sm:w-20 sm:h-20 flex-shrink-0 rounded-lg cursor-pointer transition duration-300 border-2 overflow-hidden ${index === currentImageIndex ? 'border-pink-600 ring-2 ring-pink-100 scale-105' : 'border-transparent opacity-70 hover:opacity-100 hover:border-stone-200'}`}
                     onClick={() => setCurrentImageIndex(index)}
-                  />
+                  >
+                    <img
+                        src={img}
+                        alt={`Thumbnail ${index + 1}`}
+                        className="w-full h-full object-cover"
+                    />
+                  </div>
                 ))}
               </div>
           )}
