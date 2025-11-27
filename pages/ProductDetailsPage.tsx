@@ -213,8 +213,8 @@ const ProductDetailsPage: React.FC = () => {
             )}
           </div>
           
-          {/* Thumbnails */}
-          {images.length > 1 && (
+          {/* Thumbnails - Always show if at least 1 image exists to confirm loaded state */}
+          {images.length > 0 && (
               <div className="flex space-x-3 overflow-x-auto p-1 scrollbar-hide">
                 {images.map((img, index) => (
                   <img
