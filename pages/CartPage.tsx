@@ -6,56 +6,56 @@ import { useAppStore } from '../store';
 
 const CartItemComponent: React.FC<{ item: CartItem, updateCartQuantity: (id: string, size: string, newQuantity: number) => void }> = ({ item, updateCartQuantity }) => (
   <div className="
-    group relative flex gap-4 
-    bg-white p-3 sm:p-4 rounded-xl shadow-sm border border-stone-100
+    flex gap-4 
+    bg-white p-4 rounded-xl shadow-sm border border-stone-100
     lg:bg-transparent lg:p-0 lg:rounded-none lg:shadow-none lg:border-0 lg:border-b lg:border-stone-100 lg:py-6 lg:first:pt-0 lg:last:border-0
     transition-all duration-300 hover:shadow-md lg:hover:shadow-none lg:hover:bg-stone-50/30
   ">
     
-    {/* Image Section - Wider on mobile now (w-24) */}
-    <div className="w-24 aspect-[3/4] flex-shrink-0 overflow-hidden rounded-lg border border-stone-100 bg-stone-200 lg:w-28">
+    {/* Image Section */}
+    <div className="w-24 lg:w-28 aspect-[3/4] flex-shrink-0 overflow-hidden rounded-lg border border-stone-100 bg-stone-50">
       <img src={item.image} alt={item.name} className="w-full h-full object-cover transition-transform duration-500 group-hover:scale-105" />
     </div>
 
     {/* Details Section */}
-    <div className="flex flex-col flex-1 justify-between min-w-0 py-0.5">
+    <div className="flex flex-col flex-1 justify-between min-w-0">
       
-      {/* Header: Name & Remove */}
-      <div className="flex justify-between items-start gap-2">
-        <div className="min-w-0 pr-6">
+      {/* Top: Name & Remove */}
+      <div className="flex justify-between items-start gap-3">
+        <div className="min-w-0 space-y-1.5">
           <h3 className="text-base font-bold text-stone-800 line-clamp-2 leading-snug">{item.name}</h3>
-          <p className="text-xs sm:text-sm text-stone-500 font-medium mt-1">
-            Size: <span className="text-stone-900">{item.size === 'Free' ? 'Free Size' : item.size}</span>
+          <p className="text-xs text-stone-500 font-medium inline-flex items-center bg-stone-50 px-2 py-1 rounded border border-stone-100">
+            Size: <span className="text-stone-900 ml-1">{item.size === 'Free' ? 'Free Size' : item.size}</span>
           </p>
         </div>
-        {/* Remove Button - Absolute on mobile for better touch target/positioning */}
+        {/* Remove Button - Static flex item to prevent overlap */}
         <button 
           onClick={() => updateCartQuantity(item.id, item.size, 0)} 
-          className="absolute top-3 right-3 lg:static text-stone-400 hover:text-red-500 transition-colors p-1 rounded-full hover:bg-red-50 lg:p-1 lg:hover:bg-transparent"
+          className="text-stone-400 hover:text-red-500 transition-colors p-2 rounded-full hover:bg-red-50 flex-shrink-0 -mr-2 -mt-2"
           aria-label="Remove item"
         >
           <X className="w-5 h-5" />
         </button>
       </div>
 
-      {/* Footer: Price & Quantity */}
-      <div className="flex items-end justify-between mt-3">
+      {/* Bottom: Price & Quantity (Separated by border on mobile) */}
+      <div className="flex items-end justify-between mt-4 pt-3 border-t border-dashed border-stone-100 lg:border-none lg:pt-0 lg:mt-2">
         <div className="flex flex-col">
-            <span className="text-[10px] text-stone-400 font-medium hidden sm:block">Unit: ৳{item.price.toLocaleString('en-IN')}</span>
-            <span className="text-lg font-bold text-pink-600">৳{(item.price * item.quantity).toLocaleString('en-IN')}</span>
+            <span className="text-[10px] text-stone-400 font-bold uppercase tracking-wider mb-0.5">Total</span>
+            <span className="text-lg font-extrabold text-pink-600 leading-none">৳{(item.price * item.quantity).toLocaleString('en-IN')}</span>
         </div>
 
-        <div className="flex items-center bg-stone-50 border border-stone-200 rounded-lg h-9 sm:h-10 shadow-sm">
+        <div className="flex items-center bg-white border border-stone-200 rounded-lg h-9 shadow-sm">
           <button 
             onClick={() => updateCartQuantity(item.id, item.size, item.quantity - 1)} 
-            className="w-9 sm:w-10 h-full flex items-center justify-center text-stone-500 hover:text-pink-600 hover:bg-pink-50 rounded-l-lg transition active:bg-pink-100"
+            className="w-9 h-full flex items-center justify-center text-stone-500 hover:text-pink-600 active:bg-pink-50 rounded-l-lg transition border-r border-stone-100"
           >
             <Minus className="w-4 h-4" />
           </button>
-          <span className="w-8 sm:w-10 text-center font-bold text-sm text-stone-800 select-none">{item.quantity}</span>
+          <span className="w-9 text-center font-bold text-sm text-stone-800 select-none">{item.quantity}</span>
           <button 
             onClick={() => updateCartQuantity(item.id, item.size, item.quantity + 1)} 
-            className="w-9 sm:w-10 h-full flex items-center justify-center text-stone-500 hover:text-pink-600 hover:bg-pink-50 rounded-r-lg transition active:bg-pink-100"
+            className="w-9 h-full flex items-center justify-center text-stone-500 hover:text-pink-600 active:bg-pink-50 rounded-r-lg transition border-l border-stone-100"
           >
             <Plus className="w-4 h-4" />
           </button>
