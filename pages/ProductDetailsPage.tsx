@@ -1,7 +1,7 @@
 
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useCallback } from 'react';
 import { Product } from '../types';
-import { ShoppingCart, ChevronDown, X } from 'lucide-react';
+import { ShoppingCart, ChevronDown, X, ChevronLeft, ChevronRight } from 'lucide-react';
 import { useAppStore } from '../store';
 
 const ProductDetailsPageSkeleton: React.FC = () => (
@@ -60,19 +60,21 @@ const ProductDetailsPage: React.FC = () => {
   const sizes = product?.sizes || [];
   const displayColors = product?.colors || [];
 
-  const [selectedImage, setSelectedImage] = useState(images[0] || '');
+  const [currentImageIndex, setCurrentImageIndex] = useState(0);
   const [quantity, setQuantity] = useState(1);
   
   const isFreeSizeOnly = sizes.length === 1 && sizes[0] === 'Free';
   const [selectedSize, setSelectedSize] = useState<string | null>(isFreeSizeOnly ? 'Free' : null);
   const [isSizeGuideOpen, setIsSizeGuideOpen] = useState(false);
 
+  // Swipe state
+  const [touchStart, setTouchStart] = useState(0);
+  const [touchEnd, setTouchEnd] = useState(0);
+
   useEffect(() => {
     if (product) {
-        const productImages = product.images || [];
-        if (productImages.length > 0) {
-            setSelectedImage(productImages[0]);
-        }
+        // Reset image index to 0 when product changes
+        setCurrentImageIndex(0);
         
         const productSizes = product.sizes || [];
         const isFreeSize = productSizes.length === 1 && productSizes[0] === 'Free';
@@ -98,6 +100,38 @@ const ProductDetailsPage: React.FC = () => {
     }
   }, [product]);
 
+  const handleNextImage = useCallback(() => {
+    if (images.length > 0) {
+        setCurrentImageIndex((prev) => (prev + 1) % images.length);
+    }
+  }, [images.length]);
+
+  const handlePrevImage = useCallback(() => {
+    if (images.length > 0) {
+        setCurrentImageIndex((prev) => (prev - 1 + images.length) % images.length);
+    }
+  }, [images.length]);
+
+  // Swipe handlers
+  const minSwipeDistance = 50;
+  const onTouchStart = (e: React.TouchEvent) => {
+    setTouchEnd(0);
+    setTouchStart(e.targetTouches[0].clientX);
+  }
+  const onTouchMove = (e: React.TouchEvent) => setTouchEnd(e.targetTouches[0].clientX);
+  const onTouchEnd = () => {
+    if (!touchStart || !touchEnd) return;
+    const distance = touchStart - touchEnd;
+    const isLeftSwipe = distance > minSwipeDistance;
+    const isRightSwipe = distance < -minSwipeDistance;
+    if (isLeftSwipe) {
+      handleNextImage();
+    }
+    if (isRightSwipe) {
+      handlePrevImage();
+    }
+  }
+
   if (loading && !product) {
     return <ProductDetailsPageSkeleton />;
   }
@@ -120,6 +154,7 @@ const ProductDetailsPage: React.FC = () => {
   };
 
   const originalPrice = product.price + 200;
+  const selectedImage = images[currentImageIndex] || '';
 
   return (
     <main className="max-w-6xl mx-auto px-4 sm:px-6 lg:px-8 pt-6 sm:pt-8">
@@ -129,20 +164,67 @@ const ProductDetailsPage: React.FC = () => {
 
       <div className="lg:grid lg:grid-cols-2 lg:gap-12 bg-white p-4 sm:p-8 rounded-xl shadow-lg border border-stone-200">
         <div className="space-y-4">
-          <div className="aspect-[3.5/4] overflow-hidden rounded-xl">
-            {selectedImage && <img src={selectedImage} alt={product.name} className="w-full h-full object-cover" />}
+          <div 
+            className="aspect-[3.5/4] overflow-hidden rounded-xl relative group bg-stone-100 touch-pan-y"
+            onTouchStart={onTouchStart}
+            onTouchMove={onTouchMove}
+            onTouchEnd={onTouchEnd}
+          >
+            {images.length > 0 ? (
+                <img 
+                    src={selectedImage} 
+                    alt={product.name} 
+                    className="w-full h-full object-cover transition-opacity duration-300" 
+                />
+            ) : (
+                 <div className="w-full h-full flex items-center justify-center text-stone-400">No Image Available</div>
+            )}
+
+            {/* Navigation Arrows (Show only if multiple images) */}
+            {images.length > 1 && (
+                <>
+                    <button 
+                        onClick={(e) => { e.stopPropagation(); handlePrevImage(); }}
+                        className="hidden sm:flex absolute left-3 top-1/2 -translate-y-1/2 bg-white/80 hover:bg-white text-stone-800 p-2 rounded-full shadow-md opacity-0 group-hover:opacity-100 transition-all duration-300 active:scale-95"
+                        aria-label="Previous image"
+                    >
+                        <ChevronLeft className="w-6 h-6" />
+                    </button>
+                    <button 
+                        onClick={(e) => { e.stopPropagation(); handleNextImage(); }}
+                        className="hidden sm:flex absolute right-3 top-1/2 -translate-y-1/2 bg-white/80 hover:bg-white text-stone-800 p-2 rounded-full shadow-md opacity-0 group-hover:opacity-100 transition-all duration-300 active:scale-95"
+                         aria-label="Next image"
+                    >
+                        <ChevronRight className="w-6 h-6" />
+                    </button>
+                    
+                    {/* Dots Indicator */}
+                    <div className="absolute bottom-4 left-1/2 transform -translate-x-1/2 flex space-x-2 z-10">
+                        {images.map((_, idx) => (
+                            <div 
+                                key={idx} 
+                                className={`h-2 rounded-full transition-all duration-300 shadow-sm ${idx === currentImageIndex ? 'bg-pink-600 w-6' : 'bg-white/70 w-2 hover:bg-white'}`}
+                            />
+                        ))}
+                    </div>
+                </>
+            )}
           </div>
-          <div className="flex space-x-3 overflow-x-auto p-1">
-            {images.map((img, index) => (
-              <img
-                key={index}
-                src={img}
-                alt={`Thumbnail ${index + 1}`}
-                className={`w-16 h-16 sm:w-24 sm:h-24 object-cover rounded-lg cursor-pointer transition duration-300 ${selectedImage === img ? 'ring-2 ring-pink-600 scale-105' : 'opacity-75 hover:opacity-100'}`}
-                onClick={() => setSelectedImage(img)}
-              />
-            ))}
-          </div>
+          
+          {/* Thumbnails */}
+          {images.length > 1 && (
+              <div className="flex space-x-3 overflow-x-auto p-1 scrollbar-hide">
+                {images.map((img, index) => (
+                  <img
+                    key={index}
+                    src={img}
+                    alt={`Thumbnail ${index + 1}`}
+                    className={`w-16 h-16 sm:w-20 sm:h-20 object-cover rounded-lg cursor-pointer transition duration-300 border-2 ${index === currentImageIndex ? 'border-pink-600 ring-2 ring-pink-100 scale-105' : 'border-transparent opacity-70 hover:opacity-100 hover:border-stone-200'}`}
+                    onClick={() => setCurrentImageIndex(index)}
+                  />
+                ))}
+              </div>
+          )}
         </div>
 
         <div className="mt-6 lg:mt-0 space-y-6">
