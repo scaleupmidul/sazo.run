@@ -1,5 +1,5 @@
 
-import React, { useState, useEffect, useCallback } from 'react';
+import React, { useState, useEffect, useCallback, useMemo } from 'react';
 import { Product } from '../types';
 import { ShoppingCart, ChevronDown, X, ChevronLeft, ChevronRight } from 'lucide-react';
 import { useAppStore } from '../store';
@@ -55,8 +55,20 @@ const ProductDetailsPage: React.FC = () => {
     loading: state.loading
   }));
 
-  // Use safe accessors for properties that might be missing
-  const images = product?.images || [];
+  // Force at least 3 images for the gallery layout to look consistent (requested feature)
+  const images = useMemo(() => {
+    if (!product || !product.images) return [];
+    let imgs = [...product.images];
+    // If we have at least 1 image but less than 3, duplicate the first one to fill the slots
+    // This ensures the 3-image gallery requirement is met visually
+    if (imgs.length > 0 && imgs.length < 3) {
+       while(imgs.length < 3) {
+         imgs.push(imgs[0]); 
+       }
+    }
+    return imgs;
+  }, [product]);
+
   const sizes = product?.sizes || [];
   const displayColors = product?.colors || [];
 
@@ -73,14 +85,11 @@ const ProductDetailsPage: React.FC = () => {
 
   useEffect(() => {
     if (product) {
-        // Reset image index to 0 when product changes
         setCurrentImageIndex(0);
-        
         const productSizes = product.sizes || [];
         const isFreeSize = productSizes.length === 1 && productSizes[0] === 'Free';
         setSelectedSize(isFreeSize ? 'Free' : null);
-
-        // Push view_item event to dataLayer
+        
         window.dataLayer = window.dataLayer || [];
         window.dataLayer.push({
             event: 'view_item',
@@ -157,7 +166,7 @@ const ProductDetailsPage: React.FC = () => {
   const selectedImage = images[currentImageIndex] || '';
 
   return (
-    <main className="max-w-6xl mx-auto px-4 sm:px-6 lg:px-8 pt-6 sm:pt-8">
+    <main className="max-w-6xl mx-auto px-4 sm:px-6 lg:px-8 pt-6 sm:pt-8 pb-12">
       <button onClick={() => navigate('/shop')} className="mb-6 sm:mb-8 flex items-center text-stone-600 hover:text-stone-900 transition text-sm w-full">
         <ChevronDown className="w-4 h-4 transform rotate-90" /> Back to Shop
       </button>
@@ -309,4 +318,3 @@ const ProductDetailsPage: React.FC = () => {
 };
 
 export default ProductDetailsPage;
- 
