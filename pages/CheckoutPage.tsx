@@ -1,8 +1,103 @@
-// ... imports
 
-// ... InputField component ...
+import React, { useState, useMemo, useEffect, useRef } from 'react';
+import { useAppStore } from '../store';
+import { LoaderCircle } from 'lucide-react';
 
-// ... CheckoutPageSkeleton component ...
+// Improved InputField with text-base on mobile to prevent iOS zoom
+const InputField: React.FC<{ label: string; name: string; type?: string; value: string; onChange: (e: React.ChangeEvent<HTMLInputElement | HTMLSelectElement>) => void; required?: boolean; placeholder?: string; }> = 
+({ label, name, type = 'text', value, onChange, required = true, placeholder }) => (
+    <div className="space-y-1.5">
+      <label htmlFor={name} className="text-sm font-medium text-stone-700">{label} {required && <span className="text-red-500">*</span>}</label>
+      <input 
+        type={type} 
+        id={name} 
+        name={name} 
+        value={value || ''} 
+        onChange={onChange} 
+        required={required} 
+        placeholder={placeholder} 
+        className="w-full p-3 border border-stone-300 rounded-lg focus:ring-pink-600 focus:border-pink-600 transition text-base sm:text-sm bg-white text-black" 
+      />
+    </div>
+);
+
+const CheckoutPageSkeleton: React.FC = () => (
+    <main className="w-full max-w-[1440px] mx-auto px-4 sm:px-6 lg:px-8 pt-8 sm:pt-12 animate-pulse">
+        {/* Page Title Box */}
+        <div className="h-10 bg-stone-200 rounded w-48 mx-auto mb-8"></div>
+        
+        <div className="flex flex-col lg:grid lg:grid-cols-5 lg:gap-8 xl:gap-12">
+            
+            {/* Order Summary Skeleton (Right Column - Wider) */}
+            <div className="lg:col-span-2 h-fit order-1 lg:order-2 mb-8 lg:mb-0">
+                <div className="h-7 bg-stone-200 rounded w-1/2 mb-6"></div>
+                <div className="space-y-4">
+                    {/* Item Skeletons */}
+                    <div className="flex gap-3">
+                        <div className="w-16 h-20 bg-stone-200 rounded"></div>
+                        <div className="flex-1 space-y-2 py-1">
+                            <div className="h-4 bg-stone-200 rounded w-3/4"></div>
+                            <div className="h-3 bg-stone-200 rounded w-1/2"></div>
+                            <div className="h-4 bg-stone-200 rounded w-1/3"></div>
+                        </div>
+                    </div>
+                     <div className="flex gap-3">
+                        <div className="w-16 h-20 bg-stone-200 rounded"></div>
+                        <div className="flex-1 space-y-2 py-1">
+                            <div className="h-4 bg-stone-200 rounded w-3/4"></div>
+                            <div className="h-3 bg-stone-200 rounded w-1/2"></div>
+                            <div className="h-4 bg-stone-200 rounded w-1/3"></div>
+                        </div>
+                    </div>
+                    
+                    <div className="h-px bg-stone-200 my-4"></div>
+                    
+                    {/* Totals */}
+                    <div className="flex justify-between"><div className="h-4 bg-stone-200 rounded w-1/3"></div><div className="h-4 bg-stone-200 rounded w-1/4"></div></div>
+                    <div className="flex justify-between mt-2"><div className="h-4 bg-stone-200 rounded w-1/2"></div><div className="h-4 bg-stone-200 rounded w-1/4"></div></div>
+                    
+                    <div className="h-px bg-stone-200 my-4"></div>
+                    <div className="flex justify-between items-center"><div className="h-6 bg-stone-200 rounded w-1/3"></div><div className="h-8 bg-stone-200 rounded w-1/3"></div></div>
+                </div>
+            </div>
+
+            {/* Form Skeleton (Left Column) */}
+            <div className="lg:col-span-3 space-y-8 order-2 lg:order-1">
+                {/* Shipping Info Section */}
+                <div>
+                    <div className="h-7 bg-stone-200 rounded w-1/3 mb-6 pb-2"></div>
+                    <div className="space-y-4">
+                        <div className="h-12 bg-stone-200 rounded-lg w-full"></div>
+                        <div className="h-12 bg-stone-200 rounded-lg w-full"></div>
+                        <div className="h-12 bg-stone-200 rounded-lg w-full"></div>
+                        <div className="h-12 bg-stone-200 rounded-lg w-full"></div>
+                    </div>
+                </div>
+
+                {/* Delivery Area Section */}
+                <div>
+                    <div className="h-7 bg-stone-200 rounded w-1/3 mb-6 pt-4"></div>
+                    <div className="space-y-3">
+                        <div className="h-14 bg-stone-200 rounded-lg w-full"></div>
+                        <div className="h-14 bg-stone-200 rounded-lg w-full"></div>
+                    </div>
+                </div>
+
+                {/* Payment Method Section */}
+                <div>
+                    <div className="h-7 bg-stone-200 rounded w-1/3 mb-6 pt-4"></div>
+                     <div className="space-y-3">
+                        <div className="h-14 bg-stone-200 rounded-lg w-full"></div>
+                        <div className="h-14 bg-stone-200 rounded-lg w-full"></div>
+                    </div>
+                </div>
+                
+                {/* Submit Button */}
+                <div className="h-14 bg-stone-200 rounded-full mt-8 w-full"></div>
+            </div>
+        </div>
+    </main>
+);
 
 // Component to safely render HTML content to prevent crashes
 const SafeHTML: React.FC<{ content: string; style?: React.CSSProperties }> = ({ content, style }) => {
@@ -140,8 +235,7 @@ const CheckoutPage: React.FC = () => {
   const effectiveShippingCharge = isOnlinePayment ? 0 : shippingCharge;
   const totalPayable = safeCartTotal + effectiveShippingCharge;
 
-  // FIX: Removed the automatic .replace(/\n/g, '<br />') to prevent double spacing.
-  // We now rely on CSS `white-space: pre-wrap` to handle newlines correctly.
+  // We simply pass the string as is. white-space: pre-wrap in CSS handles newlines.
   const formattedPaymentInfo = safeSettings.onlinePaymentInfo || '';
   
   if (loading) {
@@ -387,7 +481,7 @@ const CheckoutPage: React.FC = () => {
             
           {formData.paymentMethod === 'Online' && safeSettings.onlinePaymentEnabled && (
             <div className="mt-6 pt-6 border-t border-stone-200 animate-scaleIn bg-pink-50/50 rounded-xl shadow-inner">
-              <div className="text-center py-3 px-4 sm:p-4 bg-pink-100 sm:rounded-lg mb-4">
+              <div className="text-center py-3 px-4 sm:p-4 bg-pink-100 sm:rounded-lg text-stone-800 mb-4">
                 <SafeHTML 
                     content={formattedPaymentInfo} 
                     style={{
