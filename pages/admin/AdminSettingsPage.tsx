@@ -1,7 +1,8 @@
+
 import React, { useState, useEffect } from 'react';
 // FIX: Corrected the import path for `useAppStore` from the non-existent 'StoreContext.tsx' to the correct location 'store/index.ts'.
 import { useAppStore } from '../../store';
-import { Save, LoaderCircle, Plus, Trash2 } from 'lucide-react';
+import { Save, LoaderCircle, Plus, Trash2, CheckCircle } from 'lucide-react';
 import { SliderImageSetting, CategoryImageSetting, ShippingOption, SocialMediaLink, AppSettings } from '../../types';
 
 // Utility function to compress images client-side
@@ -124,6 +125,7 @@ const TabButton: React.FC<{ label: string; isActive: boolean; onClick: () => voi
 const AdminSettingsPage: React.FC = () => {
     const { settings, updateSettings, notify } = useAppStore();
     const [isSaving, setIsSaving] = useState(false);
+    const [isSaved, setIsSaved] = useState(false); // New state for success feedback
     const [activeTab, setActiveTab] = useState('general');
     
     // State for Admin Credentials
@@ -295,6 +297,8 @@ const AdminSettingsPage: React.FC = () => {
         }
 
         setIsSaving(true);
+        setIsSaved(false);
+
         try {
             const settingsToUpdate: Partial<AppSettings> = {
                 // General Tab
@@ -335,6 +339,11 @@ const AdminSettingsPage: React.FC = () => {
             setNewPassword('');
             setConfirmNewPassword('');
             setPasswordChangeConfirm('');
+            
+            setIsSaved(true);
+            setTimeout(() => {
+                setIsSaved(false);
+            }, 2000);
 
         } catch (error) {
             // Error is already notified by useStore's updateSettings
@@ -656,15 +665,37 @@ const AdminSettingsPage: React.FC = () => {
                     </div>
                 </main>
             </div>
-            <div className="flex justify-end sticky bottom-6 mt-8">
+            
+            <div className="flex justify-end sticky bottom-6 mt-8 z-20">
                 <button
                     type="button"
                     onClick={handleSave}
-                    disabled={isSaving}
-                    className="bg-pink-600 text-white px-6 py-3 rounded-lg shadow-lg hover:bg-pink-700 transition flex items-center space-x-2 disabled:bg-pink-400"
+                    disabled={isSaving || isSaved}
+                    className={`
+                        px-6 py-3 rounded-lg shadow-lg transition-all duration-300 flex items-center space-x-2
+                        ${isSaved 
+                            ? 'bg-green-600 hover:bg-green-700 text-white scale-105' 
+                            : 'bg-pink-600 hover:bg-pink-700 text-white'
+                        }
+                        disabled:opacity-70 disabled:cursor-not-allowed
+                    `}
                 >
-                    {isSaving ? <LoaderCircle className="w-5 h-5 animate-spin" /> : <Save className="w-5 h-5" />}
-                    <span className="font-bold">{isSaving ? 'Saving...' : 'Save All Settings'}</span>
+                    {isSaving ? (
+                        <>
+                            <LoaderCircle className="w-5 h-5 animate-spin" />
+                            <span className="font-bold">Saving...</span>
+                        </>
+                    ) : isSaved ? (
+                        <>
+                            <CheckCircle className="w-5 h-5 animate-bounce" />
+                            <span className="font-bold">Saved!</span>
+                        </>
+                    ) : (
+                        <>
+                            <Save className="w-5 h-5" />
+                            <span className="font-bold">Save All Settings</span>
+                        </>
+                    )}
                 </button>
             </div>
         </div>
