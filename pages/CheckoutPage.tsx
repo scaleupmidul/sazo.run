@@ -464,9 +464,6 @@ const CheckoutPage: React.FC = () => {
                       <input type="radio" name="paymentMethod" value="Online" checked={formData.paymentMethod === 'Online'} onChange={handleChange} className="form-radio h-5 w-5 text-pink-600 focus:ring-pink-600 mt-0.5 flex-shrink-0" />
                        <div className="min-w-0">
                          <span className="font-semibold text-stone-700 text-sm block">Online Payment</span>
-                         {safeOnlinePaymentMethods.length > 0 && (
-                            <p className="text-xs text-stone-500 mt-0.5 truncate">{safeOnlinePaymentMethods.join(' / ')}</p>
-                         )}
                        </div>
                     </label>
                   </div>
