@@ -463,7 +463,7 @@ const CheckoutPage: React.FC = () => {
                     <label className="flex items-start space-x-3 p-4 cursor-pointer">
                       <input type="radio" name="paymentMethod" value="Online" checked={formData.paymentMethod === 'Online'} onChange={handleChange} className="form-radio h-5 w-5 text-pink-600 focus:ring-pink-600 mt-0.5 flex-shrink-0" />
                        <div className="min-w-0">
-                         <span className="font-semibold text-stone-700 text-sm block">Online Payment</span>
+                         <span className="font-semibold text-stone-700 text-sm block">Bkash / Nagad</span>
                        </div>
                     </label>
                   </div>
