@@ -1,19 +1,131 @@
-// pages/admin/AdminSettingsPage.tsx
 
-// ... imports
 import React, { useState, useEffect } from 'react';
+// FIX: Corrected the import path for `useAppStore` from the non-existent 'StoreContext.tsx' to the correct location 'store/index.ts'.
 import { useAppStore } from '../../store';
 import { Save, LoaderCircle, Plus, Trash2, CheckCircle } from 'lucide-react';
-// ... other imports
+import { SliderImageSetting, CategoryImageSetting, ShippingOption, SocialMediaLink, AppSettings } from '../../types';
 
-// ... helper functions (compressImage, ImageInput, TabButton)
+// Utility function to compress images client-side
+const compressImage = (file: File, options: { maxWidth: number; quality: number }): Promise<string> => {
+    return new Promise((resolve, reject) => {
+        const img = new Image();
+        img.src = URL.createObjectURL(file);
+        img.onload = () => {
+            URL.revokeObjectURL(img.src); // Clean up blob URL
+            const { maxWidth, quality } = options;
+            let { width, height } = img;
+
+            // Calculate new dimensions while maintaining aspect ratio
+            if (width > height) {
+                if (width > maxWidth) {
+                    height = Math.round((height * maxWidth) / width);
+                    width = maxWidth;
+                }
+            } else {
+                const maxHeight = maxWidth; 
+                if (height > maxHeight) {
+                    width = Math.round((width * maxHeight) / height);
+                    height = maxHeight;
+                }
+            }
+
+            const canvas = document.createElement('canvas');
+            canvas.width = width;
+            canvas.height = height;
+            const ctx = canvas.getContext('2d');
+            if (!ctx) {
+                return reject('Failed to get canvas context');
+            }
+            ctx.drawImage(img, 0, 0, width, height);
+            
+            const dataUrl = canvas.toDataURL(file.type === 'image/png' ? 'image/png' : 'image/jpeg', quality);
+            resolve(dataUrl);
+        };
+        img.onerror = (error) => reject(error);
+    });
+};
+
+interface ImageInputProps {
+    currentImage: string;
+    onImageChange: (value: string) => void;
+    options: { maxWidth: number; quality: number };
+}
+
+const ImageInput: React.FC<ImageInputProps> = ({ currentImage, onImageChange, options }) => {
+    const { notify } = useAppStore();
+    const [inputType, setInputType] = useState<'upload' | 'url'>('upload');
+    const [isProcessing, setIsProcessing] = useState(false);
+
+    const handleFileSelect = async (e: React.ChangeEvent<HTMLInputElement>) => {
+        const file = e.target.files?.[0];
+        if (!file) return;
+
+        if (file.size > 15 * 1024 * 1024) { // 15MB limit
+             notify('File is too large. Please select an image under 15MB.', 'error');
+             return;
+        }
+        
+        setIsProcessing(true);
+        try {
+            const compressedDataUrl = await compressImage(file, options);
+            onImageChange(compressedDataUrl);
+        } catch (error) {
+            console.error('Image compression failed:', error);
+            notify('Failed to process image. Please try a different one.', 'error');
+        } finally {
+            setIsProcessing(false);
+        }
+    };
+    
+    return (
+        <div className="flex-grow">
+            <div className="flex items-center mb-2">
+                <button type="button" onClick={() => setInputType('upload')} className={`px-3 py-1 text-xs rounded-l-md ${inputType === 'upload' ? 'bg-pink-600 text-white' : 'bg-gray-200 text-gray-700'}`}>Upload File</button>
+                <button type="button" onClick={() => setInputType('url')} className={`px-3 py-1 text-xs rounded-r-md ${inputType === 'url' ? 'bg-pink-600 text-white' : 'bg-gray-200 text-gray-700'}`}>Use Image URL</button>
+            </div>
+            {inputType === 'upload' ? (
+                <div className="flex items-center gap-2">
+                    <input 
+                        type="file" 
+                        onChange={handleFileSelect} 
+                        accept="image/*" 
+                        className="block w-full text-sm text-gray-500 file:mr-4 file:py-2 file:px-4 file:rounded-full file:border-0 file:text-sm file:font-semibold file:bg-pink-50 file:text-pink-700 hover:file:bg-pink-100"
+                    />
+                    {isProcessing && <LoaderCircle className="w-5 h-5 animate-spin text-pink-600 flex-shrink-0" />}
+                </div>
+            ) : (
+                <input 
+                    type="text"
+                    value={currentImage.startsWith('data:') ? '' : currentImage}
+                    onChange={(e) => onImageChange(e.target.value)}
+                    placeholder="https://example.com/image.jpg"
+                    className="w-full p-2 border rounded bg-white text-black text-sm"
+                />
+            )}
+        </div>
+    );
+};
+
+
+// Tab Button Component
+const TabButton: React.FC<{ label: string; isActive: boolean; onClick: () => void }> = ({ label, isActive, onClick }) => (
+    <button
+        type="button"
+        onClick={onClick}
+        className={`w-full text-left px-4 py-3 rounded-lg transition-colors duration-200 text-sm font-medium ${
+            isActive
+                ? 'bg-pink-600 text-white shadow'
+                : 'text-gray-600 hover:bg-pink-100 hover:text-pink-700'
+        }`}
+    >
+        {label}
+    </button>
+);
 
 const AdminSettingsPage: React.FC = () => {
-    // ... state declarations ...
-    // (Ensure state hooks are preserved exactly as they are)
     const { settings, updateSettings, notify } = useAppStore();
     const [isSaving, setIsSaving] = useState(false);
-    const [isSaved, setIsSaved] = useState(false);
+    const [isSaved, setIsSaved] = useState(false); // New state for success feedback
     const [activeTab, setActiveTab] = useState('general');
     
     // State for Admin Credentials
@@ -29,12 +141,16 @@ const AdminSettingsPage: React.FC = () => {
     const [onlinePaymentEnabled, setOnlinePaymentEnabled] = useState(settings.onlinePaymentEnabled ?? true);
     const [onlinePaymentMethodsText, setOnlinePaymentMethodsText] = useState(settings.onlinePaymentMethods?.join(', ') || '');
     
-    // ... other state initializations ...
+    // State for Shipping Settings
     const [shippingOptions, setShippingOptions] = useState<ShippingOption[]>(settings.shippingOptions || []);
+
+    // State for Appearance Settings
     const [sliderImages, setSliderImages] = useState<SliderImageSetting[]>(settings.sliderImages || []);
     const [promoImage, setPromoImage] = useState(settings.productPagePromoImage || '');
     const [homepageNewArrivalsCount, setHomepageNewArrivalsCount] = useState(settings.homepageNewArrivalsCount || 4);
     const [homepageTrendingCount, setHomepageTrendingCount] = useState(settings.homepageTrendingCount || 4);
+
+    // State for Content Settings
     const [footerDescription, setFooterDescription] = useState(settings.footerDescription || '');
     const [managedCategories, setManagedCategories] = useState<string[]>(settings.categories || []);
     const [categoryImages, setCategoryImages] = useState<CategoryImageSetting[]>(settings.categoryImages || []);
@@ -43,6 +159,8 @@ const AdminSettingsPage: React.FC = () => {
     const [newSocialPlatform, setNewSocialPlatform] = useState('');
     const [newSocialUrl, setNewSocialUrl] = useState('');
     const [privacyPolicy, setPrivacyPolicy] = useState(settings.privacyPolicy || '');
+
+    // State for Contact Page
     const [contactAddress, setContactAddress] = useState(settings.contactAddress || '');
     const [contactPhone, setContactPhone] = useState(settings.contactPhone || '');
     const [contactEmail, setContactEmail] = useState(settings.contactEmail || '');
@@ -81,7 +199,6 @@ const AdminSettingsPage: React.FC = () => {
         setShowCityField(settings.showCityField ?? true);
     }, [settings]);
 
-    // ... handler functions (handleSliderChange, addSlider, etc.) ...
     const handleSliderChange = (index: number, field: keyof SliderImageSetting, value: string) => {
         const newSliders = [...sliderImages];
         (newSliders[index] as any)[field] = value;
@@ -185,17 +302,31 @@ const AdminSettingsPage: React.FC = () => {
         try {
             const settingsToUpdate: Partial<AppSettings> = {
                 // General Tab
-                adminEmail, contactAddress, contactPhone, contactEmail, whatsappNumber, showWhatsAppButton, showCityField,
+                adminEmail,
+                contactAddress,
+                contactPhone,
+                contactEmail,
+                whatsappNumber,
+                showWhatsAppButton,
+                showCityField,
                 // Payments & Shipping Tab
-                onlinePaymentInfo, onlinePaymentInfoStyles, codEnabled, 
-                // NOTE: Here we save `onlinePaymentEnabled` which now semantically means "Is Disabled" if true
-                onlinePaymentEnabled, 
+                onlinePaymentInfo,
+                onlinePaymentInfoStyles,
+                codEnabled,
+                onlinePaymentEnabled,
                 onlinePaymentMethods: onlinePaymentMethodsText.split(',').map(m => m.trim()).filter(Boolean),
                 shippingOptions,
                 // Appearance Tab
-                sliderImages, productPagePromoImage: promoImage, homepageNewArrivalsCount, homepageTrendingCount,
+                sliderImages,
+                productPagePromoImage: promoImage,
+                homepageNewArrivalsCount,
+                homepageTrendingCount,
                 // Content Tab
-                footerDescription, categories: managedCategories, categoryImages, socialMediaLinks, privacyPolicy,
+                footerDescription,
+                categories: managedCategories,
+                categoryImages,
+                socialMediaLinks,
+                privacyPolicy,
             };
     
             if (newPassword) {
@@ -204,14 +335,18 @@ const AdminSettingsPage: React.FC = () => {
         
             await updateSettings(settingsToUpdate);
             
+            // Only clear password fields on successful save
             setNewPassword('');
             setConfirmNewPassword('');
             setPasswordChangeConfirm('');
             
             setIsSaved(true);
-            setTimeout(() => { setIsSaved(false); }, 2000);
+            setTimeout(() => {
+                setIsSaved(false);
+            }, 2000);
 
         } catch (error) {
+            // Error is already notified by useStore's updateSettings
             console.error("Failed to save settings from AdminSettingsPage");
         } finally {
             setIsSaving(false);
@@ -256,12 +391,10 @@ const AdminSettingsPage: React.FC = () => {
                                 </div>
                             )}
                         </div>
-                    </div>
-                    {/* ... other general settings ... */}
+                    </div> 
                     <div className="bg-white p-6 rounded-lg shadow-md">
                         <h2 className="text-xl font-bold text-gray-800 mb-4 border-b pb-2">Contact Page & Checkout</h2>
                         <div className="space-y-6">
-                            {/* ... address inputs ... */}
                             <div>
                                 <label htmlFor="contactAddress" className="block text-sm font-medium text-gray-700 mb-2">Address</label>
                                 <input type="text" id="contactAddress" value={contactAddress} onChange={(e) => setContactAddress(e.target.value)} className="w-full p-3 border border-gray-300 rounded-lg text-sm bg-white text-black" />
@@ -330,7 +463,7 @@ const AdminSettingsPage: React.FC = () => {
                                 <h3 className="block text-sm font-medium text-gray-700 mb-2">Payment Method Availability</h3>
                                 <div className="space-y-3 p-4 bg-gray-50 rounded-lg border">
                                     <label className="flex items-center"><input type="checkbox" checked={codEnabled} onChange={(e) => setCodEnabled(e.target.checked)} className="h-5 w-5 text-pink-600 rounded" /><span className="ml-3 text-sm text-black">Enable COD</span></label>
-                                    <label className="flex items-center"><input type="checkbox" checked={onlinePaymentEnabled} onChange={(e) => setOnlinePaymentEnabled(e.target.checked)} className="h-5 w-5 text-pink-600 rounded" /><span className="ml-3 text-sm text-black">Disable Online Payment</span></label>
+                                    <label className="flex items-center"><input type="checkbox" checked={onlinePaymentEnabled} onChange={(e) => setOnlinePaymentEnabled(e.target.checked)} className="h-5 w-5 text-pink-600 rounded" /><span className="ml-3 text-sm text-black">Enable Online Payment</span></label>
                                 </div>
                             </div>
                             <div>
@@ -361,7 +494,6 @@ const AdminSettingsPage: React.FC = () => {
                     </div>
                 </>
             );
-            // ... appearance and content tabs remain same ...
             case 'appearance': return (
                 <>
                     <div className="bg-white p-6 rounded-lg shadow-md">
@@ -447,7 +579,6 @@ const AdminSettingsPage: React.FC = () => {
                         />
                         <p className="text-xs text-gray-500 mt-1">This text appears in the footer of your website.</p>
                     </div>
-                    {/* ... rest of content tab ... */}
                     <div className="bg-white p-6 rounded-lg shadow-md">
                         <h2 className="text-xl font-bold text-gray-800 mb-4 border-b pb-2">Homepage Categories</h2>
                         <div className="p-4 bg-gray-50 rounded-lg border">
