@@ -1,4 +1,3 @@
-
 import React, { useState, useMemo, useEffect, useRef } from 'react';
 import { useAppStore } from '../store';
 import { LoaderCircle } from 'lucide-react';
@@ -560,7 +559,7 @@ const CheckoutPage: React.FC = () => {
           
           {!isFormValid && (
              <p className="text-red-500 text-xs text-center mt-2 font-medium animate-pulse">
-                Please fill in all required fields first (আগে সব তথ্য পূরণ করুন)
+                Fill all required fields ( সব তথ্য পূরণ করুন )
              </p>
           )}
         </form>
