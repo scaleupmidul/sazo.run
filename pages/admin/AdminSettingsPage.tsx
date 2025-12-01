@@ -1,6 +1,5 @@
 
 import React, { useState, useEffect } from 'react';
-// FIX: Corrected the import path for `useAppStore` from the non-existent 'StoreContext.tsx' to the correct location 'store/index.ts'.
 import { useAppStore } from '../../store';
 import { Save, LoaderCircle, Plus, Trash2, CheckCircle } from 'lucide-react';
 import { SliderImageSetting, CategoryImageSetting, ShippingOption, SocialMediaLink, AppSettings } from '../../types';
@@ -300,37 +299,50 @@ const AdminSettingsPage: React.FC = () => {
         setIsSaved(false);
 
         try {
-            const settingsToUpdate: Partial<AppSettings> = {
-                // General Tab
-                adminEmail,
-                contactAddress,
-                contactPhone,
-                contactEmail,
-                whatsappNumber,
-                showWhatsAppButton,
-                showCityField,
-                // Payments & Shipping Tab
-                onlinePaymentInfo,
-                onlinePaymentInfoStyles,
-                codEnabled,
-                onlinePaymentEnabled,
-                onlinePaymentMethods: onlinePaymentMethodsText.split(',').map(m => m.trim()).filter(Boolean),
-                shippingOptions,
-                // Appearance Tab
-                sliderImages,
-                productPagePromoImage: promoImage,
-                homepageNewArrivalsCount,
-                homepageTrendingCount,
-                // Content Tab
-                footerDescription,
-                categories: managedCategories,
-                categoryImages,
-                socialMediaLinks,
-                privacyPolicy,
-            };
+            // Optimization: Only send changed fields to avoid large payloads (especially images)
+            const settingsToUpdate: Partial<AppSettings> = {};
+
+            if (adminEmail !== settings.adminEmail) settingsToUpdate.adminEmail = adminEmail;
+            if (contactAddress !== settings.contactAddress) settingsToUpdate.contactAddress = contactAddress;
+            if (contactPhone !== settings.contactPhone) settingsToUpdate.contactPhone = contactPhone;
+            if (contactEmail !== settings.contactEmail) settingsToUpdate.contactEmail = contactEmail;
+            if (whatsappNumber !== settings.whatsappNumber) settingsToUpdate.whatsappNumber = whatsappNumber;
+            if (showWhatsAppButton !== settings.showWhatsAppButton) settingsToUpdate.showWhatsAppButton = showWhatsAppButton;
+            if (showCityField !== settings.showCityField) settingsToUpdate.showCityField = showCityField;
+
+            // Payments
+            if (onlinePaymentInfo !== settings.onlinePaymentInfo) settingsToUpdate.onlinePaymentInfo = onlinePaymentInfo;
+            if (JSON.stringify(onlinePaymentInfoStyles) !== JSON.stringify(settings.onlinePaymentInfoStyles)) settingsToUpdate.onlinePaymentInfoStyles = onlinePaymentInfoStyles;
+            if (codEnabled !== settings.codEnabled) settingsToUpdate.codEnabled = codEnabled;
+            if (onlinePaymentEnabled !== settings.onlinePaymentEnabled) settingsToUpdate.onlinePaymentEnabled = onlinePaymentEnabled;
+            
+            const currentMethods = onlinePaymentMethodsText.split(',').map(m => m.trim()).filter(Boolean);
+            if (JSON.stringify(currentMethods) !== JSON.stringify(settings.onlinePaymentMethods)) settingsToUpdate.onlinePaymentMethods = currentMethods;
+            
+            if (JSON.stringify(shippingOptions) !== JSON.stringify(settings.shippingOptions)) settingsToUpdate.shippingOptions = shippingOptions;
+
+            // Appearance
+            if (JSON.stringify(sliderImages) !== JSON.stringify(settings.sliderImages)) settingsToUpdate.sliderImages = sliderImages;
+            if (promoImage !== settings.productPagePromoImage) settingsToUpdate.productPagePromoImage = promoImage;
+            if (homepageNewArrivalsCount !== settings.homepageNewArrivalsCount) settingsToUpdate.homepageNewArrivalsCount = homepageNewArrivalsCount;
+            if (homepageTrendingCount !== settings.homepageTrendingCount) settingsToUpdate.homepageTrendingCount = homepageTrendingCount;
+
+            // Content
+            if (footerDescription !== settings.footerDescription) settingsToUpdate.footerDescription = footerDescription;
+            if (JSON.stringify(managedCategories) !== JSON.stringify(settings.categories)) settingsToUpdate.categories = managedCategories;
+            if (JSON.stringify(categoryImages) !== JSON.stringify(settings.categoryImages)) settingsToUpdate.categoryImages = categoryImages;
+            if (JSON.stringify(socialMediaLinks) !== JSON.stringify(settings.socialMediaLinks)) settingsToUpdate.socialMediaLinks = socialMediaLinks;
+            if (privacyPolicy !== settings.privacyPolicy) settingsToUpdate.privacyPolicy = privacyPolicy;
     
             if (newPassword) {
                 settingsToUpdate.adminPassword = newPassword;
+            }
+
+            // Check if there is anything to update
+            if (Object.keys(settingsToUpdate).length === 0) {
+                 notify('No changes detected.', 'info');
+                 setIsSaving(false);
+                 return;
             }
         
             await updateSettings(settingsToUpdate);
@@ -391,7 +403,7 @@ const AdminSettingsPage: React.FC = () => {
                                 </div>
                             )}
                         </div>
-                    </div> 
+                    </div>
                     <div className="bg-white p-6 rounded-lg shadow-md">
                         <h2 className="text-xl font-bold text-gray-800 mb-4 border-b pb-2">Contact Page & Checkout</h2>
                         <div className="space-y-6">
@@ -530,7 +542,7 @@ const AdminSettingsPage: React.FC = () => {
                                                 <ImageInput 
                                                     currentImage={slider.image}
                                                     onImageChange={(val) => handleSliderChange(index, 'image', val)}
-                                                    options={{ maxWidth: 1920, quality: 0.85 }}
+                                                    options={{ maxWidth: 1280, quality: 0.75 }}
                                                 />
                                             </div>
                                         </div>
@@ -541,7 +553,7 @@ const AdminSettingsPage: React.FC = () => {
                                                 <ImageInput 
                                                     currentImage={slider.mobileImage || ''}
                                                     onImageChange={(val) => handleSliderChange(index, 'mobileImage', val)}
-                                                    options={{ maxWidth: 800, quality: 0.85 }}
+                                                    options={{ maxWidth: 640, quality: 0.75 }}
                                                 />
                                             </div>
                                         </div>
@@ -560,7 +572,7 @@ const AdminSettingsPage: React.FC = () => {
                                 <ImageInput 
                                     currentImage={promoImage}
                                     onImageChange={(val) => setPromoImage(val)}
-                                    options={{ maxWidth: 1200, quality: 0.85 }}
+                                    options={{ maxWidth: 1024, quality: 0.75 }}
                                 />
                             </div>
                         </div>
@@ -595,7 +607,7 @@ const AdminSettingsPage: React.FC = () => {
                                             <ImageInput
                                                 currentImage={getCategoryImageForAdmin(catName)}
                                                 onImageChange={(val) => setCategoryImageForAdmin(catName, val)}
-                                                options={{ maxWidth: 800, quality: 0.85 }}
+                                                options={{ maxWidth: 600, quality: 0.75 }}
                                             />
                                         </div>
                                          <button type="button" onClick={() => removeCategory(catName)} className="absolute top-2 right-2 p-1 text-red-500 hover:bg-red-100 rounded-full"><Trash2 className="w-4 h-4" /></button>
