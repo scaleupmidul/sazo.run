@@ -391,11 +391,11 @@ const CheckoutPage: React.FC = () => {
           <div>
             <h3 className="text-xl font-bold text-pink-600 border-b pb-2 mb-4">Shipping Information</h3>
             <div className="space-y-4">
-              <InputField label="Full Name" name="name" value={formData.name} onChange={handleChange} placeholder="e.g., Your Name" />
-              <InputField label="Phone Number" name="phone" type="tel" value={formData.phone} onChange={handleChange} placeholder="e.g., 017XX XXX XXX" />
-              <InputField label="Full Delivery Address" name="address" value={formData.address} onChange={handleChange} placeholder="e.g., House 1, Road 2, Block A, Gulshan" />
+              <InputField label="Full Name (পূর্ণ নাম)" name="name" value={formData.name} onChange={handleChange} placeholder="e.g., Your Name" />
+              <InputField label="Phone Number (ফোন নাম্বার)" name="phone" type="tel" value={formData.phone} onChange={handleChange} placeholder="e.g., 017XX XXX XXX" />
+              <InputField label="Full Delivery Address (সম্পূর্ণ ডেলিভারি ঠিকানা)" name="address" value={formData.address} onChange={handleChange} placeholder="e.g., House 1, Road 2, Block A, Gulshan" />
               {safeSettings.showCityField && (
-                <InputField label="City" name="city" value={formData.city} onChange={handleChange} placeholder="e.g., Dhaka" />
+                <InputField label="City (শহর)" name="city" value={formData.city} onChange={handleChange} placeholder="e.g., Dhaka" />
               )}
             </div>
           </div>
@@ -487,7 +487,7 @@ const CheckoutPage: React.FC = () => {
 
                               <div className="space-y-4">
                                 <div className="space-y-1">
-                                  <label htmlFor="paymentNumber" className="text-sm font-medium text-stone-700">Your sending number <span className="text-red-500">*</span></label>
+                                  <label htmlFor="paymentNumber" className="text-sm font-medium text-stone-700">Sending Number (যে নাম্বার থেকে টাকা পাঠাবেন) <span className="text-red-500">*</span></label>
                                   <input 
                                     type="tel" 
                                     id="paymentNumber" 
@@ -501,7 +501,7 @@ const CheckoutPage: React.FC = () => {
                                 </div>
 
                                 <div className="space-y-1">
-                                    <label htmlFor="onlinePaymentMethod" className="text-sm font-medium text-stone-700">Payment Method <span className="text-red-500">*</span></label>
+                                    <label htmlFor="onlinePaymentMethod" className="text-sm font-medium text-stone-700">Payment Method (পেমেন্ট পদ্ধতি) <span className="text-red-500">*</span></label>
                                     <select 
                                         id="onlinePaymentMethod" 
                                         name="onlinePaymentMethod" 
@@ -518,7 +518,7 @@ const CheckoutPage: React.FC = () => {
                                 </div>
 
                                 <div className="space-y-1">
-                                    <label htmlFor="transactionId" className="text-sm font-medium text-stone-700">Transaction ID <span className="text-red-500">*</span></label>
+                                    <label htmlFor="transactionId" className="text-sm font-medium text-stone-700">Transaction ID (ট্রানজেকশন আইডি) <span className="text-red-500">*</span></label>
                                     <input 
                                         type="text" 
                                         id="transactionId" 
