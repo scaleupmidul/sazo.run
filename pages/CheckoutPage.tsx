@@ -487,7 +487,7 @@ const CheckoutPage: React.FC = () => {
 
                               <div className="space-y-4">
                                 <div className="space-y-1">
-                                  <label htmlFor="paymentNumber" className="text-sm font-medium text-stone-700">Sending Number (যে নাম্বার থেকে টাকা পাঠাবেন) <span className="text-red-500">*</span></label>
+                                  <label htmlFor="paymentNumber" className="text-sm font-medium text-stone-700">Your Sending Number (যে নাম্বার থেকে টাকা পাঠাবেন) <span className="text-red-500">*</span></label>
                                   <input 
                                     type="tel" 
                                     id="paymentNumber" 
@@ -557,6 +557,12 @@ const CheckoutPage: React.FC = () => {
                 <span>Place Order</span>
              )}
           </button>
+          
+          {!isFormValid && (
+             <p className="text-red-500 text-xs text-center mt-2 font-medium animate-pulse">
+                Please fill in all required fields first (আগে সব তথ্য পূরণ করুন)
+             </p>
+          )}
         </form>
 
       </div>
