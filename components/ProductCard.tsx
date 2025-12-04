@@ -1,3 +1,4 @@
+// components/ProductCard.tsx
 
 import React, { useState, memo } from 'react';
 import { ArrowRight } from 'lucide-react';
@@ -6,9 +7,10 @@ import { useAppStore } from '../store';
 
 interface ProductCardProps {
   product: Product;
+  priority?: boolean; // New prop to prioritize loading for above-the-fold items
 }
 
-const ProductCard: React.FC<ProductCardProps> = ({ product }) => {
+const ProductCard: React.FC<ProductCardProps> = ({ product, priority = false }) => {
     const [isImageLoaded, setIsImageLoaded] = useState(false);
     const originalPrice = product.price + 200;
     const navigate = useAppStore(state => state.navigate);
@@ -26,8 +28,10 @@ const ProductCard: React.FC<ProductCardProps> = ({ product }) => {
                 <img
                     src={product.images[0]}
                     alt={product.name}
-                    className={`absolute inset-0 w-full h-full object-cover transition-opacity duration-500 group-hover:scale-105 ${isImageLoaded ? 'opacity-100' : 'opacity-0'}`}
-                    loading="lazy"
+                    className={`absolute inset-0 w-full h-full object-cover transition-opacity duration-300 group-hover:scale-105 ${isImageLoaded ? 'opacity-100' : 'opacity-0'}`}
+                    loading={priority ? "eager" : "lazy"}
+                    // @ts-ignore - fetchPriority is standard but React types might lag behind
+                    fetchPriority={priority ? "high" : "auto"}
                     decoding="async"
                     // Optimization: Tells browser to download appropriate size based on viewport
                     sizes="(max-width: 640px) 50vw, (max-width: 1024px) 33vw, 25vw"
