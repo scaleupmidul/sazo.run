@@ -1,4 +1,3 @@
-// pages/HomePage.tsx
 
 import React from 'react';
 import ProductCard from '../components/ProductCard';
@@ -17,7 +16,7 @@ const SectionTitle: React.FC<{ title: string }> = ({ title }) => (
 const ProductCardSkeleton: React.FC = () => (
   <div className="flex flex-col w-full h-full">
     {/* Image Box */}
-    <div className="aspect-[3/4] bg-stone-200 rounded-lg w-full animate-pulse mb-4" />
+    <div className="aspect-[3.5/4] bg-stone-200 rounded-lg w-full animate-pulse mb-4" />
     {/* Content Boxes */}
     <div className="flex flex-col space-y-2">
       {/* Title */}
@@ -121,10 +120,7 @@ const HomePage: React.FC = () => {
                // Show 4 full-size skeletons during loading
                [...Array(4)].map((_, i) => <ProductCardSkeleton key={i} />)
             ) : (
-               // Priority loading for the first 4 items to improve Speed Index/LCP
-               newArrivalsDisplay.map((p, index) => (
-                 <ProductCard key={p.id} product={p} priority={index < 4} />
-               ))
+               newArrivalsDisplay.map(p => <ProductCard key={p.id} product={p} />)
             )}
           </div>
           {!loading && allNewArrivals.length > (homepageNewArrivalsCount || 4) && (
@@ -143,9 +139,9 @@ const HomePage: React.FC = () => {
           <SectionTitle title="Trending Products" />
           <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-4 sm:gap-6">
             {loading ? (
+               // Show 4 full-size skeletons during loading
                [...Array(4)].map((_, i) => <ProductCardSkeleton key={i} />)
             ) : (
-               // Trending products are usually below the fold, so default lazy loading is fine
                trendingProductsDisplay.map(p => <ProductCard key={p.id} product={p} />)
             )}
           </div>
