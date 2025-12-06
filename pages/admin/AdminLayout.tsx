@@ -1,5 +1,6 @@
 
-import React, { useState } from 'react';
+
+import React, { useState, useEffect } from 'react';
 import { LayoutDashboard, ShoppingBag, ListOrdered, LogOut, Menu, X, MessageSquare, Settings, CreditCard } from 'lucide-react';
 import { useAppStore } from '../../store';
 
@@ -22,8 +23,13 @@ const NavLink: React.FC<{ icon: React.ElementType, label: string, onClick: () =>
 );
 
 const AdminLayout: React.FC<AdminLayoutProps> = ({ children }) => {
-  const { navigate, logout, contactMessages } = useAppStore();
+  const { navigate, logout, contactMessages, newOrdersCount, loadAdminData } = useAppStore();
   const [isSidebarOpen, setIsSidebarOpen] = useState(false);
+
+  // Trigger admin data load when layout mounts (admin logs in or refreshes on admin page)
+  useEffect(() => {
+      loadAdminData();
+  }, [loadAdminData]);
 
   const unreadMessagesCount = contactMessages.filter(msg => !msg.isRead).length;
 
@@ -40,7 +46,7 @@ const AdminLayout: React.FC<AdminLayoutProps> = ({ children }) => {
       <nav className="flex-1 p-4 space-y-2">
         <NavLink icon={LayoutDashboard} label="Dashboard" onClick={() => handleNav('/admin/dashboard')} />
         <NavLink icon={ShoppingBag} label="Products" onClick={() => handleNav('/admin/products')} />
-        <NavLink icon={ListOrdered} label="Orders" onClick={() => handleNav('/admin/orders')} />
+        <NavLink icon={ListOrdered} label="Orders" onClick={() => handleNav('/admin/orders')} notificationCount={newOrdersCount} />
         <NavLink icon={MessageSquare} label="Messages" onClick={() => handleNav('/admin/messages')} notificationCount={unreadMessagesCount} />
         <NavLink icon={CreditCard} label="Transactions" onClick={() => handleNav('/admin/transactions')} />
         <NavLink icon={Settings} label="Settings" onClick={() => handleNav('/admin/settings')} />
