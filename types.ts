@@ -1,5 +1,4 @@
 
-
 // FIX: Import Dispatch and SetStateAction types from React to resolve namespace errors.
 import type { Dispatch, SetStateAction } from 'react';
 
@@ -64,7 +63,7 @@ export interface SliderImage {
 
 export interface Notification {
   message: string;
-  type: 'success' | 'error' | 'info';
+  type: 'success' | 'error';
 }
 
 export interface ContactMessage {
@@ -166,7 +165,7 @@ export interface AppState {
   selectedProduct: Product | null;
   setSelectedProduct: (product: Product | null) => void;
   notification: Notification | null;
-  notify: (message: string, type?: 'success' | 'error' | 'info') => void;
+  notify: (message: string, type?: 'success' | 'error') => void;
   orders: Order[];
   updateOrderStatus: (orderId: string, status: OrderStatus) => Promise<void>;
   addOrder: (
