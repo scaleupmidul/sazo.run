@@ -1,3 +1,4 @@
+
 import React, { useEffect, useState } from 'react';
 import { useAppStore } from '../store';
 import { CheckCircle, ShoppingBag, ArrowRight, Copy, Printer, MapPin, CreditCard, Home } from 'lucide-react';
@@ -52,6 +53,13 @@ const ThankYouPage: React.FC<ThankYouPageProps> = ({ orderId }) => {
         fetchOrder();
     }, [orderId]);
 
+    // Helper to generate SKU for DataLayer
+    const generateSKU = (name: string, size: string): string => {
+        const namePart = name.split(' ')[0].toUpperCase().replace(/[^A-Z0-9]/g, ''); 
+        const sizePart = size === 'Free' ? 'FREE' : size.toUpperCase();
+        return `SAZO-${namePart}-${sizePart}`;
+    };
+
     useEffect(() => {
         if (order) {
             // Calculate item subtotal for fallback/reference
@@ -71,12 +79,12 @@ const ThankYouPage: React.FC<ThankYouPageProps> = ({ orderId }) => {
             window.dataLayer.push({
                 event: 'purchase',
                 ecommerce: {
-                    transaction_id: `order_${order.orderId || order.id}`, // Added prefix here
+                    transaction_id: `order_${order.orderId || order.id}`,
                     value: order.total,
                     shipping: shippingValue,
                     currency: 'BDT',
                     items: (order.cartItems || []).map(item => ({
-                        item_id: item.id,
+                        item_id: generateSKU(item.name, item.size), // Use SKU
                         item_name: item.name,
                         price: item.price,
                         quantity: item.quantity,
