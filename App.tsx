@@ -1,40 +1,36 @@
+// App.tsx
 
-import React, { useEffect, Suspense, lazy } from 'react';
+import React, { useEffect } from 'react';
 import { useAppStore } from './store';
 import Header from './components/Header';
 import Footer from './components/Footer';
 import Notification from './components/Notification';
 import WhatsAppButton from './components/WhatsAppButton';
-import PageLoader from './components/PageLoader';
+
+// Static Imports for Instant Navigation (No Lazy Loading)
+import HomePage from './pages/HomePage';
+import ShopPage from './pages/ShopPage';
+import ProductDetailsPage from './pages/ProductDetailsPage';
+import CartPage from './pages/CartPage';
+import CheckoutPage from './pages/CheckoutPage';
+import ContactPage from './pages/ContactPage';
+import PolicyPage from './pages/PolicyPage';
+import ThankYouPage from './pages/ThankYouPage';
+
+import AdminLoginPage from './pages/admin/AdminLoginPage';
+import AdminLayout from './pages/admin/AdminLayout';
+import AdminDashboardPage from './pages/admin/AdminDashboardPage';
+import AdminProductsPage from './pages/admin/AdminProductsPage';
+import AdminOrdersPage from './pages/admin/AdminOrdersPage';
+import AdminMessagesPage from './pages/admin/AdminMessagesPage';
+import AdminSettingsPage from './pages/admin/AdminSettingsPage';
+import AdminPaymentInfoPage from './pages/admin/AdminPaymentInfoPage';
 
 // Initialize the dataLayer for analytics
 declare global {
   interface Window { dataLayer: any[]; }
 }
 window.dataLayer = window.dataLayer || [];
-
-// STATIC IMPORT: Keep HomePage static for fastest LCP (Largest Contentful Paint)
-import HomePage from './pages/HomePage';
-
-// LAZY IMPORTS: Split other pages into separate chunks to reduce initial bundle size
-const ShopPage = lazy(() => import('./pages/ShopPage'));
-const ProductDetailsPage = lazy(() => import('./pages/ProductDetailsPage'));
-const CartPage = lazy(() => import('./pages/CartPage'));
-const CheckoutPage = lazy(() => import('./pages/CheckoutPage'));
-const ContactPage = lazy(() => import('./pages/ContactPage'));
-const PolicyPage = lazy(() => import('./pages/PolicyPage'));
-const ThankYouPage = lazy(() => import('./pages/ThankYouPage'));
-
-// Admin pages lazy loaded
-const AdminLoginPage = lazy(() => import('./pages/admin/AdminLoginPage'));
-const AdminLayout = lazy(() => import('./pages/admin/AdminLayout'));
-const AdminDashboardPage = lazy(() => import('./pages/admin/AdminDashboardPage'));
-const AdminProductsPage = lazy(() => import('./pages/admin/AdminProductsPage'));
-const AdminOrdersPage = lazy(() => import('./pages/admin/AdminOrdersPage'));
-const AdminMessagesPage = lazy(() => import('./pages/admin/AdminMessagesPage'));
-const AdminSettingsPage = lazy(() => import('./pages/admin/AdminSettingsPage'));
-const AdminPaymentInfoPage = lazy(() => import('./pages/admin/AdminPaymentInfoPage'));
-
 
 const App: React.FC = () => {
   const path = useAppStore(state => state.path);
@@ -52,7 +48,6 @@ const App: React.FC = () => {
         // Sanitize ID: Remove any query parameters (e.g., ?fbclid=...)
         const productId = productMatch[1].split('?')[0];
         
-        // FIX: This guard prevents an infinite re-render loop.
         if (selectedProduct?.id === productId) {
             return;
         }
@@ -67,7 +62,7 @@ const App: React.FC = () => {
   
   useEffect(() => {
     const BASE_TITLE = 'SAZO';
-    let pageTitle = BASE_TITLE; // Default title
+    let pageTitle = BASE_TITLE;
 
     const productMatch = path.match(/^\/product\/(.+)$/);
     const thankYouMatch = path.match(/^\/thank-you\/(.+)$/);
@@ -127,75 +122,41 @@ const App: React.FC = () => {
 
   const renderPage = () => {
     if (path === '/admin/login') {
-      return (
-        <Suspense fallback={<PageLoader />}>
-          <AdminLoginPage />
-        </Suspense>
-      );
+      return <AdminLoginPage />;
     }
 
     if (path.startsWith('/admin')) {
       return (
-        <Suspense fallback={<PageLoader />}>
           <AdminLayout>
               {renderAdminPageContent()}
           </AdminLayout>
-        </Suspense>
       );
     }
     
     const productMatch = path.match(/^\/product\/(.+)$/);
     if (productMatch) {
-      return (
-        <Suspense fallback={<PageLoader />}>
-          <ProductDetailsPage />
-        </Suspense>
-      );
+      return <ProductDetailsPage />;
     }
 
     const thankYouMatch = path.match(/^\/thank-you\/(.+)$/);
     if (thankYouMatch) {
         const orderId = thankYouMatch[1];
-        return (
-          <Suspense fallback={<PageLoader />}>
-            <ThankYouPage orderId={orderId} />
-          </Suspense>
-        );
+        return <ThankYouPage orderId={orderId} />;
     }
 
     switch (path) {
       case '/':
-        return <HomePage />; // Rendered directly for speed
+        return <HomePage />;
       case '/shop':
-        return (
-          <Suspense fallback={<PageLoader />}>
-            <ShopPage />
-          </Suspense>
-        );
+        return <ShopPage />;
       case '/cart':
-        return (
-          <Suspense fallback={<PageLoader />}>
-            <CartPage />
-          </Suspense>
-        );
+        return <CartPage />;
       case '/checkout':
-        return (
-          <Suspense fallback={<PageLoader />}>
-            <CheckoutPage />
-          </Suspense>
-        );
+        return <CheckoutPage />;
       case '/contact':
-        return (
-          <Suspense fallback={<PageLoader />}>
-            <ContactPage />
-          </Suspense>
-        );
+        return <ContactPage />;
       case '/policy':
-        return (
-          <Suspense fallback={<PageLoader />}>
-            <PolicyPage />
-          </Suspense>
-        );
+        return <PolicyPage />;
       default:
         return <HomePage />;
     }
@@ -213,8 +174,8 @@ const App: React.FC = () => {
           body { 
             font-family: 'Inter', sans-serif; 
             color: #444;
-            overflow-x: hidden; /* Prevent horizontal scroll */
-            -ms-overflow-style: none;  /* IE and Edge */
+            overflow-x: hidden;
+            -ms-overflow-style: none;
           }
 
           /* Hide scrollbar for Firefox */
