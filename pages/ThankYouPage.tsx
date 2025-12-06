@@ -71,7 +71,7 @@ const ThankYouPage: React.FC<ThankYouPageProps> = ({ orderId }) => {
             window.dataLayer.push({
                 event: 'purchase',
                 ecommerce: {
-                    transaction_id: order.orderId || order.id,
+                    transaction_id: `order_${order.orderId || order.id}`, // Added prefix here
                     value: order.total,
                     shipping: shippingValue,
                     currency: 'BDT',
