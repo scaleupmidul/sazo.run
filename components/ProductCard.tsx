@@ -1,5 +1,3 @@
-// components/ProductCard.tsx
-
 import React, { useState, memo } from 'react';
 import { ArrowRight } from 'lucide-react';
 import { Product } from '../types';
@@ -29,7 +27,8 @@ const ProductCard: React.FC<ProductCardProps> = ({ product, priority = false }) 
                     src={product.images[0]}
                     alt={product.name}
                     className={`absolute inset-0 w-full h-full object-cover transition-opacity duration-300 group-hover:scale-105 ${isImageLoaded ? 'opacity-100' : 'opacity-0'}`}
-                    loading="eager" // Forced eager loading for all product cards as requested
+                    // Optimized loading: Only use eager for top items (priority=true), else lazy
+                    loading={priority ? "eager" : "lazy"}
                     // @ts-ignore
                     fetchPriority={priority ? "high" : "auto"}
                     decoding="async"
