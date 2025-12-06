@@ -9,15 +9,6 @@ const getTokenFromStorage = (): string | null => {
     return localStorage.getItem('sazo_admin_token');
 };
 
-// Helper to generate SKU for DataLayer
-const generateSKU = (name: string, size: string): string => {
-    if (!name) return 'UNKNOWN';
-    // Take first word of name, uppercase it, remove special chars
-    const namePart = name.split(' ')[0].toUpperCase().replace(/[^A-Z0-9]/g, ''); 
-    const sizePart = size === 'Free' ? 'FREE' : size.toUpperCase();
-    return `SAZO-${namePart}-${sizePart}`;
-};
-
 const DEFAULT_SETTINGS: AppSettings = {
     onlinePaymentInfo: '',
     onlinePaymentInfoStyles: { fontSize: '0.875rem' },
@@ -261,7 +252,7 @@ export const useAppStore = create<AppState>()(
                 ecommerce: {
                     currency: 'BDT',
                     items: [{
-                        item_id: generateSKU(product.name, size),
+                        item_id: product.id,
                         item_name: product.name,
                         item_category: product.category,
                         price: product.price,
@@ -292,7 +283,7 @@ export const useAppStore = create<AppState>()(
                     ecommerce: {
                         currency: 'BDT',
                         items: [{
-                            item_id: generateSKU(productDetails.name, size),
+                            item_id: productDetails.id,
                             item_name: productDetails.name,
                             item_category: productDetails.category,
                             price: productDetails.price,
@@ -309,7 +300,7 @@ export const useAppStore = create<AppState>()(
                     ecommerce: {
                         currency: 'BDT',
                         items: [{
-                            item_id: generateSKU(productDetails.name, size),
+                            item_id: productDetails.id,
                             item_name: productDetails.name,
                             item_category: productDetails.category,
                             price: productDetails.price,
