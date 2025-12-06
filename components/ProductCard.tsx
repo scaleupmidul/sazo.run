@@ -1,3 +1,4 @@
+// components/ProductCard.tsx
 
 import React, { useState, memo } from 'react';
 import { ArrowRight } from 'lucide-react';
@@ -6,31 +7,36 @@ import { useAppStore } from '../store';
 
 interface ProductCardProps {
   product: Product;
+  priority?: boolean;
 }
 
-const ProductCard: React.FC<ProductCardProps> = ({ product }) => {
+const ProductCard: React.FC<ProductCardProps> = ({ product, priority = false }) => {
     const [isImageLoaded, setIsImageLoaded] = useState(false);
     const originalPrice = product.price + 200;
     const navigate = useAppStore(state => state.navigate);
 
     return (
         <div 
-            className="bg-white rounded-lg border border-stone-200 overflow-hidden transition duration-500 ease-in-out shadow-lg hover:shadow-2xl hover:-translate-y-2 group cursor-pointer"
+            className="bg-white rounded-lg border border-stone-200 overflow-hidden transition duration-500 ease-in-out shadow-lg hover:shadow-2xl hover:-translate-y-2 group cursor-pointer h-full flex flex-col"
             onClick={() => navigate(`/product/${product.id}`)}
         >
             <div
-                className="relative aspect-[3.5/4] overflow-hidden bg-stone-200"
+                className="relative w-full bg-stone-200 flex-shrink-0"
+                style={{ aspectRatio: '3/4' }}
             >
                 {!isImageLoaded && <div className="absolute inset-0 bg-stone-200 animate-pulse"></div>}
                 <img
                     src={product.images[0]}
                     alt={product.name}
-                    className={`object-cover w-full h-full transition-opacity duration-500 group-hover:scale-105 ${isImageLoaded ? 'opacity-100' : 'opacity-0'}`}
-                    loading="lazy"
+                    className={`absolute inset-0 w-full h-full object-cover transition-opacity duration-300 group-hover:scale-105 ${isImageLoaded ? 'opacity-100' : 'opacity-0'}`}
+                    loading="eager" // Forced eager loading for all product cards as requested
+                    // @ts-ignore
+                    fetchPriority={priority ? "high" : "auto"}
                     decoding="async"
+                    sizes="(max-width: 640px) 50vw, (max-width: 1024px) 33vw, 25vw"
                     onLoad={() => setIsImageLoaded(true)}
                 />
-                <div className="absolute top-3 left-3 flex flex-col items-start space-y-1.5">
+                <div className="absolute top-3 left-3 flex flex-col items-start space-y-1.5 z-10">
                     {product.isNewArrival && (
                         <span className="bg-pink-600 text-white text-[9px] font-bold px-2.5 py-1 rounded-full shadow tracking-wider uppercase">NEW</span>
                     )}
@@ -39,11 +45,11 @@ const ProductCard: React.FC<ProductCardProps> = ({ product }) => {
                     )}
                 </div>
             </div>
-            <div className="p-3 sm:p-4 space-y-1.5">
-                <h3 className="text-sm sm:text-lg font-medium text-stone-900 truncate">{product.name}</h3>
+            <div className="p-3 sm:p-4 space-y-1.5 flex flex-col flex-1">
+                <h3 className="text-sm sm:text-lg font-medium text-stone-900 truncate" title={product.name}>{product.name}</h3>
                 <p className="text-xs text-pink-600 font-medium">Fabric: {product.fabric}</p>
 
-                <div className="pt-2 flex flex-col items-start">
+                <div className="pt-2 flex flex-col items-start mt-auto">
                     <div className="flex items-center space-x-2 mb-3">
                         {product.onSale ? (
                             <>
