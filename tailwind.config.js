@@ -13,7 +13,7 @@ export default {
     extend: {
       fontFamily: {
         sans: ['Inter', 'sans-serif'],
-        display: ['Poppins', 'sans-serif'],
+        display: ['Inter', 'sans-serif'],
       },
       colors: {
         stone: {
