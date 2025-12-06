@@ -1,13 +1,12 @@
-// App.tsx
-
-import React, { useEffect } from 'react';
+import React, { useEffect, Suspense } from 'react';
 import { useAppStore } from './store';
 import Header from './components/Header';
 import Footer from './components/Footer';
 import Notification from './components/Notification';
 import WhatsAppButton from './components/WhatsAppButton';
+import PageLoader from './components/PageLoader';
 
-// Static Imports for Instant Navigation (No Lazy Loading)
+// Static Imports for Instant Navigation (Customer Pages)
 import HomePage from './pages/HomePage';
 import ShopPage from './pages/ShopPage';
 import ProductDetailsPage from './pages/ProductDetailsPage';
@@ -17,14 +16,15 @@ import ContactPage from './pages/ContactPage';
 import PolicyPage from './pages/PolicyPage';
 import ThankYouPage from './pages/ThankYouPage';
 
-import AdminLoginPage from './pages/admin/AdminLoginPage';
-import AdminLayout from './pages/admin/AdminLayout';
-import AdminDashboardPage from './pages/admin/AdminDashboardPage';
-import AdminProductsPage from './pages/admin/AdminProductsPage';
-import AdminOrdersPage from './pages/admin/AdminOrdersPage';
-import AdminMessagesPage from './pages/admin/AdminMessagesPage';
-import AdminSettingsPage from './pages/admin/AdminSettingsPage';
-import AdminPaymentInfoPage from './pages/admin/AdminPaymentInfoPage';
+// Lazy Load Admin Pages to reduce bundle size for customers
+const AdminLoginPage = React.lazy(() => import('./pages/admin/AdminLoginPage'));
+const AdminLayout = React.lazy(() => import('./pages/admin/AdminLayout'));
+const AdminDashboardPage = React.lazy(() => import('./pages/admin/AdminDashboardPage'));
+const AdminProductsPage = React.lazy(() => import('./pages/admin/AdminProductsPage'));
+const AdminOrdersPage = React.lazy(() => import('./pages/admin/AdminOrdersPage'));
+const AdminMessagesPage = React.lazy(() => import('./pages/admin/AdminMessagesPage'));
+const AdminSettingsPage = React.lazy(() => import('./pages/admin/AdminSettingsPage'));
+const AdminPaymentInfoPage = React.lazy(() => import('./pages/admin/AdminPaymentInfoPage'));
 
 // Initialize the dataLayer for analytics
 declare global {
@@ -122,14 +122,20 @@ const App: React.FC = () => {
 
   const renderPage = () => {
     if (path === '/admin/login') {
-      return <AdminLoginPage />;
+      return (
+        <Suspense fallback={<PageLoader />}>
+            <AdminLoginPage />
+        </Suspense>
+      );
     }
 
     if (path.startsWith('/admin')) {
       return (
-          <AdminLayout>
-              {renderAdminPageContent()}
-          </AdminLayout>
+          <Suspense fallback={<PageLoader />}>
+            <AdminLayout>
+                {renderAdminPageContent()}
+            </AdminLayout>
+          </Suspense>
       );
     }
     
