@@ -1,4 +1,5 @@
 
+
 import { create } from 'zustand';
 import { persist, createJSONStorage } from 'zustand/middleware';
 import { AppState, Product, CartItem, Order, OrderStatus, ContactMessage, AppSettings, AdminProductsResponse } from '../types';
@@ -7,6 +8,15 @@ const API_URL = '/api';
 
 const getTokenFromStorage = (): string | null => {
     return localStorage.getItem('sazo_admin_token');
+};
+
+// Helper to generate SKU for DataLayer
+const generateSKU = (name: string, size: string): string => {
+    if (!name) return 'UNKNOWN';
+    // Take first word of name, uppercase it, remove special chars
+    const namePart = name.split(' ')[0].toUpperCase().replace(/[^A-Z0-9]/g, ''); 
+    const sizePart = size === 'Free' ? 'FREE' : size.toUpperCase();
+    return `SAZO-${namePart}-${sizePart}`;
 };
 
 const DEFAULT_SETTINGS: AppSettings = {
@@ -60,8 +70,9 @@ export const useAppStore = create<AppState>()(
             window.scrollTo(0, 0);
         },
 
+        // Optimized for Customers: Only loads public data
         loadInitialData: async () => {
-            const { isAdminAuthenticated, notify } = get();
+            const { notify } = get();
             
             try {
                 // Fetch optimized homepage data first for a fast initial load
@@ -75,11 +86,8 @@ export const useAppStore = create<AppState>()(
                 let finalProducts: Product[] = [];
 
                 if (homeData.products && homeData.products.length > 0) {
-                    // DATA REPAIR: If using backend data, ensure demo products have their images.
-                    // This fixes the issue where an old DB seed has missing images.
                     finalProducts = homeData.products.map((p: Product) => {
                         const mock = MOCK_PRODUCTS_DATA.find(m => m.name === p.name);
-                        // If it matches a mock product name, and has missing images (<3), fill them.
                         if (mock && (!p.images || p.images.length < 3)) {
                             const currentImages = p.images || [];
                             const uniqueMockImages = mock.images.filter(img => !currentImages.includes(img));
@@ -101,38 +109,8 @@ export const useAppStore = create<AppState>()(
                     loading: false
                 });
 
-                if (isAdminAuthenticated) {
-                    const token = getTokenFromStorage();
-                    const headers = token ? { 'Authorization': `Bearer ${token}` } : {};
-                    const [ordersRes, messagesRes, statsRes] = await Promise.all([
-                        fetch(`${API_URL}/orders`, { headers }),
-                        fetch(`${API_URL}/messages`, { headers }),
-                        fetch(`${API_URL}/orders/stats`, { headers })
-                    ]);
-
-                    if (ordersRes.ok && messagesRes.ok && statsRes.ok) {
-                        const ordersData = await ordersRes.json();
-                        const messagesData = await messagesRes.json();
-                        const statsData = await statsRes.json();
-                        
-                        const lastSeenOrders = localStorage.getItem('sazo_admin_last_orders_seen');
-                        const lastSeenOrdersDate = lastSeenOrders ? new Date(lastSeenOrders) : new Date(0);
-                        const newOrders = ordersData.filter((o: Order) => {
-                            const oDate = o.createdAt ? new Date(o.createdAt) : new Date(o.date);
-                            return oDate > lastSeenOrdersDate;
-                        });
-
-                        set({ 
-                            orders: ordersData, 
-                            contactMessages: messagesData,
-                            dashboardStats: statsData,
-                            newOrdersCount: newOrders.length
-                        });
-                    }
-                }
             } catch (error) {
                 console.error("Failed to load initial data, using fallback.", error);
-                // Fallback to Mock Data on error
                 set({ 
                     products: MOCK_PRODUCTS_DATA, 
                     settings: DEFAULT_SETTINGS, 
@@ -146,6 +124,47 @@ export const useAppStore = create<AppState>()(
             }
         },
 
+        // Dedicated action for Admin Data - Called ONLY from Admin Layout
+        loadAdminData: async () => {
+            const { isAdminAuthenticated } = get();
+            if (!isAdminAuthenticated) return;
+
+            const token = getTokenFromStorage();
+            if (!token) return;
+
+            const headers = { 'Authorization': `Bearer ${token}` };
+            
+            try {
+                const [ordersRes, messagesRes, statsRes] = await Promise.all([
+                    fetch(`${API_URL}/orders`, { headers }),
+                    fetch(`${API_URL}/messages`, { headers }),
+                    fetch(`${API_URL}/orders/stats`, { headers })
+                ]);
+
+                if (ordersRes.ok && messagesRes.ok && statsRes.ok) {
+                    const ordersData = await ordersRes.json();
+                    const messagesData = await messagesRes.json();
+                    const statsData = await statsRes.json();
+                    
+                    const lastSeenOrders = localStorage.getItem('sazo_admin_last_orders_seen');
+                    const lastSeenOrdersDate = lastSeenOrders ? new Date(lastSeenOrders) : new Date(0);
+                    const newOrders = ordersData.filter((o: Order) => {
+                        const oDate = o.createdAt ? new Date(o.createdAt) : new Date(o.date);
+                        return oDate > lastSeenOrdersDate;
+                    });
+
+                    set({ 
+                        orders: ordersData, 
+                        contactMessages: messagesData,
+                        dashboardStats: statsData,
+                        newOrdersCount: newOrders.length
+                    });
+                }
+            } catch (error) {
+                console.error("Failed to load admin data", error);
+            }
+        },
+
         ensureAllProductsLoaded: async () => {
             const { fullProductsLoaded, products: existingProducts } = get();
             if (fullProductsLoaded) return;
@@ -155,7 +174,6 @@ export const useAppStore = create<AppState>()(
                 if (!res.ok) throw new Error('Failed to fetch all products');
                 let allProducts: Product[] = await res.json();
                 
-                // Apply same Data Repair logic
                 if (allProducts.length > 0) {
                      allProducts = allProducts.map((p: Product) => {
                         const mock = MOCK_PRODUCTS_DATA.find(m => m.name === p.name);
@@ -252,7 +270,7 @@ export const useAppStore = create<AppState>()(
                 ecommerce: {
                     currency: 'BDT',
                     items: [{
-                        item_id: product.id,
+                        item_id: generateSKU(product.name, size),
                         item_name: product.name,
                         item_category: product.category,
                         price: product.price,
@@ -283,7 +301,7 @@ export const useAppStore = create<AppState>()(
                     ecommerce: {
                         currency: 'BDT',
                         items: [{
-                            item_id: productDetails.id,
+                            item_id: generateSKU(productDetails.name, size),
                             item_name: productDetails.name,
                             item_category: productDetails.category,
                             price: productDetails.price,
@@ -300,7 +318,7 @@ export const useAppStore = create<AppState>()(
                     ecommerce: {
                         currency: 'BDT',
                         items: [{
-                            item_id: productDetails.id,
+                            item_id: generateSKU(productDetails.name, size),
                             item_name: productDetails.name,
                             item_category: productDetails.category,
                             price: productDetails.price,
@@ -345,7 +363,7 @@ export const useAppStore = create<AppState>()(
                 const { token } = await res.json();
                 localStorage.setItem('sazo_admin_token', token);
                 set({ isAdminAuthenticated: true });
-                get().loadInitialData();
+                get().loadAdminData(); // Explicitly load admin data on login
                 get().navigate('/admin/dashboard');
                 get().notify('Login successful!', 'success');
                 return true;
