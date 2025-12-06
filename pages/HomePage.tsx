@@ -1,3 +1,4 @@
+// pages/HomePage.tsx
 
 import React from 'react';
 import ProductCard from '../components/ProductCard';
@@ -16,7 +17,7 @@ const SectionTitle: React.FC<{ title: string }> = ({ title }) => (
 const ProductCardSkeleton: React.FC = () => (
   <div className="flex flex-col w-full h-full">
     {/* Image Box */}
-    <div className="aspect-[3.5/4] bg-stone-200 rounded-lg w-full animate-pulse mb-4" />
+    <div className="aspect-[3/4] bg-stone-200 rounded-lg w-full animate-pulse mb-4" />
     {/* Content Boxes */}
     <div className="flex flex-col space-y-2">
       {/* Title */}
@@ -43,7 +44,6 @@ const HomePage: React.FC = () => {
     return category ? category.image : 'https://picsum.photos/seed/sazo-default-category/600/800';
   };
 
-  // Helper to interleave fixed-position products with flow products
   const getSortedProducts = (items: Product[], key: 'newArrivalDisplayOrder' | 'trendingDisplayOrder') => {
       const PINNED_THRESHOLD = 1000;
       const pinned: { product: Product, order: number }[] = [];
@@ -51,7 +51,6 @@ const HomePage: React.FC = () => {
 
       items.forEach(p => {
           let val = p[key];
-          // Normalize 0, null, undefined to 1000
           if (val === undefined || val === null || val === 0) val = PINNED_THRESHOLD;
           const order = Number(val);
           
@@ -62,10 +61,7 @@ const HomePage: React.FC = () => {
           }
       });
 
-      // Sort flow by ID Desc (Newest first)
       flow.sort((a, b) => b.id.localeCompare(a.id));
-      
-      // Sort pinned by Order Asc
       pinned.sort((a, b) => a.order - b.order);
 
       const result: Product[] = [];
@@ -73,18 +69,14 @@ const HomePage: React.FC = () => {
       const total = items.length;
       let currentPos = 1;
 
-      // Fill slots 1..N
       while(result.length < total) {
-          // If current position is claimed by a pinned item (or we passed it)
           if (pinned.length > 0 && pinned[0].order <= currentPos) {
               result.push(pinned.shift()!.product);
           } 
-          // Otherwise fill with flow item
           else if (flowIndex < flow.length) {
               result.push(flow[flowIndex]);
               flowIndex++;
           } 
-          // If flow exhausted, dump remaining pinned
           else if (pinned.length > 0) {
                result.push(pinned.shift()!.product);
           } else {
@@ -117,10 +109,13 @@ const HomePage: React.FC = () => {
           <SectionTitle title="New Arrivals" />
           <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-4 sm:gap-6">
             {loading ? (
-               // Show 4 full-size skeletons during loading
                [...Array(4)].map((_, i) => <ProductCardSkeleton key={i} />)
             ) : (
-               newArrivalsDisplay.map(p => <ProductCard key={p.id} product={p} />)
+               // OPTIMIZATION: Only prioritize the first 2 items (priority={index < 2}).
+               // Previously it was 4. Reducing this contention helps the Hero LCP load faster on mobile.
+               newArrivalsDisplay.map((p, index) => (
+                 <ProductCard key={p.id} product={p} priority={index < 2} />
+               ))
             )}
           </div>
           {!loading && allNewArrivals.length > (homepageNewArrivalsCount || 4) && (
@@ -139,7 +134,6 @@ const HomePage: React.FC = () => {
           <SectionTitle title="Trending Products" />
           <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-4 sm:gap-6">
             {loading ? (
-               // Show 4 full-size skeletons during loading
                [...Array(4)].map((_, i) => <ProductCardSkeleton key={i} />)
             ) : (
                trendingProductsDisplay.map(p => <ProductCard key={p.id} product={p} />)
