@@ -1,4 +1,3 @@
-
 import React, { useState, useEffect } from 'react';
 import { useAppStore } from '../../store';
 import { Save, LoaderCircle, Plus, Trash2, CheckCircle } from 'lucide-react';
@@ -299,67 +298,54 @@ const AdminSettingsPage: React.FC = () => {
         setIsSaved(false);
 
         try {
-            // Optimization: Only send changed fields to avoid large payloads (especially images)
-            const settingsToUpdate: Partial<AppSettings> = {};
-
-            if (adminEmail !== settings.adminEmail) settingsToUpdate.adminEmail = adminEmail;
-            if (contactAddress !== settings.contactAddress) settingsToUpdate.contactAddress = contactAddress;
-            if (contactPhone !== settings.contactPhone) settingsToUpdate.contactPhone = contactPhone;
-            if (contactEmail !== settings.contactEmail) settingsToUpdate.contactEmail = contactEmail;
-            if (whatsappNumber !== settings.whatsappNumber) settingsToUpdate.whatsappNumber = whatsappNumber;
-            if (showWhatsAppButton !== settings.showWhatsAppButton) settingsToUpdate.showWhatsAppButton = showWhatsAppButton;
-            if (showCityField !== settings.showCityField) settingsToUpdate.showCityField = showCityField;
-
-            // Payments
-            if (onlinePaymentInfo !== settings.onlinePaymentInfo) settingsToUpdate.onlinePaymentInfo = onlinePaymentInfo;
-            if (JSON.stringify(onlinePaymentInfoStyles) !== JSON.stringify(settings.onlinePaymentInfoStyles)) settingsToUpdate.onlinePaymentInfoStyles = onlinePaymentInfoStyles;
-            if (codEnabled !== settings.codEnabled) settingsToUpdate.codEnabled = codEnabled;
-            if (onlinePaymentEnabled !== settings.onlinePaymentEnabled) settingsToUpdate.onlinePaymentEnabled = onlinePaymentEnabled;
-            
-            const currentMethods = onlinePaymentMethodsText.split(',').map(m => m.trim()).filter(Boolean);
-            if (JSON.stringify(currentMethods) !== JSON.stringify(settings.onlinePaymentMethods)) settingsToUpdate.onlinePaymentMethods = currentMethods;
-            
-            if (JSON.stringify(shippingOptions) !== JSON.stringify(settings.shippingOptions)) settingsToUpdate.shippingOptions = shippingOptions;
-
-            // Appearance
-            if (JSON.stringify(sliderImages) !== JSON.stringify(settings.sliderImages)) settingsToUpdate.sliderImages = sliderImages;
-            if (promoImage !== settings.productPagePromoImage) settingsToUpdate.productPagePromoImage = promoImage;
-            if (homepageNewArrivalsCount !== settings.homepageNewArrivalsCount) settingsToUpdate.homepageNewArrivalsCount = homepageNewArrivalsCount;
-            if (homepageTrendingCount !== settings.homepageTrendingCount) settingsToUpdate.homepageTrendingCount = homepageTrendingCount;
-
-            // Content
-            if (footerDescription !== settings.footerDescription) settingsToUpdate.footerDescription = footerDescription;
-            if (JSON.stringify(managedCategories) !== JSON.stringify(settings.categories)) settingsToUpdate.categories = managedCategories;
-            if (JSON.stringify(categoryImages) !== JSON.stringify(settings.categoryImages)) settingsToUpdate.categoryImages = categoryImages;
-            if (JSON.stringify(socialMediaLinks) !== JSON.stringify(settings.socialMediaLinks)) settingsToUpdate.socialMediaLinks = socialMediaLinks;
-            if (privacyPolicy !== settings.privacyPolicy) settingsToUpdate.privacyPolicy = privacyPolicy;
+            // Simplified logic: Send ALL settings to ensure consistency between UI and Backend.
+            // This prevents issues where change detection might fail.
+            const settingsToUpdate: Partial<AppSettings> = {
+                adminEmail,
+                contactAddress,
+                contactPhone,
+                contactEmail,
+                whatsappNumber,
+                showWhatsAppButton,
+                showCityField,
+                onlinePaymentInfo,
+                onlinePaymentInfoStyles,
+                codEnabled,
+                onlinePaymentEnabled,
+                onlinePaymentMethods: onlinePaymentMethodsText.split(',').map(m => m.trim()).filter(Boolean),
+                shippingOptions,
+                sliderImages,
+                productPagePromoImage: promoImage,
+                homepageNewArrivalsCount,
+                homepageTrendingCount,
+                footerDescription,
+                categories: managedCategories,
+                categoryImages,
+                socialMediaLinks,
+                privacyPolicy,
+            };
     
             if (newPassword) {
                 settingsToUpdate.adminPassword = newPassword;
             }
-
-            // Check if there is anything to update
-            if (Object.keys(settingsToUpdate).length === 0) {
-                 notify('No changes detected.', 'info');
-                 setIsSaving(false);
-                 return;
-            }
         
+            // Await the server response strictly
             await updateSettings(settingsToUpdate);
             
-            // Only clear password fields on successful save
+            // Clear sensitive fields only after success
             setNewPassword('');
             setConfirmNewPassword('');
             setPasswordChangeConfirm('');
             
+            // Show success message only after await completes successfully
             setIsSaved(true);
             setTimeout(() => {
                 setIsSaved(false);
             }, 2000);
 
         } catch (error) {
-            // Error is already notified by useStore's updateSettings
-            console.error("Failed to save settings from AdminSettingsPage");
+            console.error("Failed to save settings from AdminSettingsPage", error);
+            // Do NOT set isSaved to true here.
         } finally {
             setIsSaving(false);
         }
@@ -475,7 +461,7 @@ const AdminSettingsPage: React.FC = () => {
                                 <h3 className="block text-sm font-medium text-gray-700 mb-2">Payment Method Availability</h3>
                                 <div className="space-y-3 p-4 bg-gray-50 rounded-lg border">
                                     <label className="flex items-center"><input type="checkbox" checked={codEnabled} onChange={(e) => setCodEnabled(e.target.checked)} className="h-5 w-5 text-pink-600 rounded" /><span className="ml-3 text-sm text-black">Enable COD</span></label>
-                                    <label className="flex items-center"><input type="checkbox" checked={onlinePaymentEnabled} onChange={(e) => setOnlinePaymentEnabled(e.target.checked)} className="h-5 w-5 text-pink-600 rounded" /><span className="ml-3 text-sm text-black">Enable Online Payment</span></label>
+                                    <label className="flex items-center"><input type="checkbox" checked={onlinePaymentEnabled} onChange={(e) => setOnlinePaymentEnabled(e.target.checked)} className="h-5 w-5 text-pink-600 rounded" /><span className="ml-3 text-sm text-black">Disable Online Payment</span></label>
                                 </div>
                             </div>
                             <div>
